@@ -16,8 +16,8 @@ class CreatePlayersTable extends Migration
         Schema::create('players', function (Blueprint $table) {
             $table->increments('id');
             $table->string('nickname');
-            $table->int('score');
-            $table->boolean('isDisqualified');
+            $table->integer('score')->default(0);
+            $table->boolean('isDisqualified')->default(false);
             $table->timestamps();
         });
     }

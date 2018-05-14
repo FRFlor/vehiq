@@ -14,10 +14,10 @@ class QuestionsTableSeeder extends Seeder
     {
         $numberOfQuestions = 10;
 
-        foreach(range(0,9) as $i)
+        foreach(range(1,$numberOfQuestions) as $i)
         {
             factory(Question::class)->create([
-                'statement' => 'This is question '.($i+1),
+                'statement' => 'This is question '.$i,
                 'rightAnswer' => 'Right Alternative of question '
             ]);
         }
