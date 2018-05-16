@@ -11,12 +11,24 @@ class Game extends Model
         return $this->hasMany('App\Question');
     }
 
-    static function current()
+    static function currentGame()
     {
-        $gameId = static::orderBy('id','DESC')->take(1)->get()[0]->id;
-
-        return static::find($gameId);
+        return static::orderBy('id','DESC')->first();
     }
+
+    function getCurrentQuestionAttribute()
+    {
+        return $this->questions()
+            ->orderBy('id','ASC')
+            ->skip($this->currentQuestionNumber)
+            ->first();
+    }
+
+    function getAllQuestionsAttribute()
+    {
+        return $this->questions()->orderBy('id','ASC')->get();
+    }
+
     //
     function createGame($startTime, $secondsPerQuestion = 10)
     {
@@ -28,18 +40,12 @@ class Game extends Model
         return $newGame->save();
     }
 
-    function getAllQuestionsAttribute()
+
+
+    public function gotoNextQuestion()
     {
-        return $this->questions()->orderBy('id','ASC')->get();
-    }
+        $this->currentQuestionNumber++;
 
-    public function getNextQuestion()
-    {
-        $this->currentQuestion++;
-        $this->save();
-
-        $allQuestions = $this->allQuestions;
-
-        return $allQuestions[$this->currentQuestion - 1];
+        return $this->save();;
     }
 }

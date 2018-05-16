@@ -17,7 +17,7 @@ class CreateGamesTable extends Migration
             $table->increments('id');
             $table->datetime('startTime');
             $table->integer('secondsPerQuestion')->default(10);
-            $table->integer('currentQuestion')->default(0);
+            $table->integer('currentQuestionNumber')->default(0);
             $table->timestamps();
         });
     }

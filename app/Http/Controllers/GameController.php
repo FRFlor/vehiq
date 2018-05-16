@@ -12,8 +12,6 @@ class GameController extends Controller
        static $currentQuestion = 0;
 
 
-
-
        function resetPlayingField()
        {
            Player::truncate();
@@ -43,9 +41,10 @@ class GameController extends Controller
 
     function askNextQuestion()
     {
-        $currentGame = Game::current();
-        $question = $currentGame->getNextQuestion();
-        $questionNumber = $currentGame->currentQuestion;
+        $currentGame = Game::currentGame();
+        $currentGame->goToNextQuestion();
+        $question = $currentGame->currentQuestion;
+        $questionNumber = $currentGame->currentQuestionNumber;
         return view('question.ask', compact('question','questionNumber'));
     }
 

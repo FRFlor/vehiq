@@ -41,28 +41,5 @@
             })
         }
 
-
-        function registerPlayer()
-        {
-            alert("HEY!");
-            var playerName = window.prompt("Enter your name");
-
-            axios.get("/api/player/register", {
-                params: {nick: playerName},
-            }).then(function (response) {
-                if (response.status == 200) {
-                    if (response.data.isAnswerRight) {
-                        window.location.replace('/play');
-                    }
-                    else {
-                        window.location.replace('/');
-                    }
-                }
-                else {
-                    alert("Api Failed to respond!");
-                }
-
-            })
-        }
     </script>
 @endsection
