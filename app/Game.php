@@ -20,13 +20,18 @@ class Game extends Model
     {
         return $this->questions()
             ->orderBy('id','ASC')
-            ->skip($this->currentQuestionNumber)
+            ->skip($this->currentQuestionNumber-1)
             ->first();
     }
 
     function getAllQuestionsAttribute()
     {
         return $this->questions()->orderBy('id','ASC')->get();
+    }
+
+    function getNumberOfQuestionsAttribute()
+    {
+        return $this->questions()->count();
     }
 
     //
@@ -46,6 +51,11 @@ class Game extends Model
     {
         $this->currentQuestionNumber++;
 
-        return $this->save();;
+        if ($this->currentQuestionNumber > $this->numberOfQuestions)
+        {
+            $this->currentQuestionNumber = 1;
+        }
+
+        return $this->save();
     }
 }

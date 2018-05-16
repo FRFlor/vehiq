@@ -41,5 +41,23 @@
             })
         }
 
+
+        function tryAnswer2(questionId, answerStr) {
+            axios.get("/api/game/answer", {
+                params: {userId: 1, answerGiven: answerStr},
+            }).then(function (response) {
+                if (response.status == 200) {
+                    if (response.data.isAnswerRight) {
+                        window.location.replace('/play');
+                    }
+                    else {
+                        window.location.replace('/');
+                    }
+                }
+                else {
+                    alert("Api Failed to respond!");
+                }
+            })
+        }
     </script>
 @endsection

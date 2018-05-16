@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use App\Player;
 use App\Game;
 use Carbon\Carbon;
@@ -44,8 +45,25 @@ class GameController extends Controller
         $currentGame = Game::currentGame();
         $currentGame->goToNextQuestion();
         $question = $currentGame->currentQuestion;
+
         $questionNumber = $currentGame->currentQuestionNumber;
         return view('question.ask', compact('question','questionNumber'));
+    }
+
+
+    function answerQuestion(Request $request)
+    {
+
+        $userId = $request->input('userId',1);
+        $answerGiven = $request->input('answerGiven');
+
+        $currentGame = Game::currentGame();
+
+        $currentGame->currentQuestion->registerAnswer($answerGiven);
+
+        return response()->json([
+            'isAnswerRight' => $currentGame->currentQuestion->isAnswerRight($answerGiven)
+        ],Response::HTTP_OK);
     }
 
 }
