@@ -13,19 +13,16 @@ class QuestionsController extends Controller
         return view('question.index');
     }
 
-    function show($id)
+    function show(Question $question)
     {
-        $question = Question::findOrFail($id);
         return view('question.show', compact('question'));
     }
 
     function askRandom()
     {
-
         $selectedQuestionId = rand(1,Question::count());
-        $selectedQuestion = Question::find($selectedQuestionId);
-        $questionJson = $selectedQuestion->getShuffledJson();
-        return view('question.ask', compact('questionJson'));
+        $question = Question::find($selectedQuestionId);
+        return view('question.ask', compact('question'));
     }
 
     function testAnswer(Request $request)
@@ -39,4 +36,6 @@ class QuestionsController extends Controller
             'isAnswerRight' => $question->isAnswerRight($answerProvided)
         ],Response::HTTP_OK);
     }
+
+
 }

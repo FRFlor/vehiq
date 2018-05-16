@@ -10,6 +10,12 @@
     <title>{{config('app.name','App name not found')}}</title>
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <style>
+        #answerButton{
+            margin-top: 10px
+        }
+    </style>
 </head>
 <body>
     @include('layouts.includes.navbar')

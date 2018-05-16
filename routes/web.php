@@ -17,5 +17,5 @@ Route::get('/', function () {
 
 
 Route::get('/question/index','QuestionsController@index');
-Route::get('/question/{id}','QuestionsController@show');
+Route::get('/question/{question}','QuestionsController@show');
 Route::get('/play', 'QuestionsController@askRandom');

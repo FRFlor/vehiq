@@ -11,8 +11,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $rightAnswer
  * @property string $wrongAnswer1
  * @property string $wrongAnswer2
- * @property string $wrongAnswer3
- * @property string $wrongAnswer4
+ * @property string $rightAnswerCount
+ * @property string $wrongAnswer1Count
+ * @property string $wrongAnswer2Count
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -22,30 +23,46 @@ class Question extends Model
     // Checks if an answer given matches with this question's right answer
     function isAnswerRight($answer)
     {
-        return ($answer === $this->rightAnswer);
+        return trim($answer) === trim($this->rightAnswer);
     }
 
 
-    function getShuffledJson()
+    // There has to be a better way...
+    function registerAnswer($answer)
+    {
+        if(trim($answer) === trim($this->rightAnswer))
+        {
+            $this->rightAnswerCount++;
+        }
+        else if(trim($answer) === trim($this->wrongAnswer1))
+        {
+            $this->wrongAnswer1Count++;
+        }
+        else if(trim($answer) === trim($this->wrongAnswer2))
+        {
+            $this->wrongAnswer2Count++;
+        }
+
+
+        return $this->save();
+    }
+
+
+
+    function getShuffledAnswersAttribute()
     {
         $possibleAnswers = [
             $this->rightAnswer,
             $this->wrongAnswer1,
-            $this->wrongAnswer2,
-            $this->wrongAnswer3,
-            $this->wrongAnswer4
+            $this->wrongAnswer2
         ];
 
         shuffle($possibleAnswers);
 
         return response()->json([
-            'id' => $this->id,
-            'statement' => $this->statement,
             'choiceA' => $possibleAnswers[0],
             'choiceB' => $possibleAnswers[1],
             'choiceC' => $possibleAnswers[2],
-            'choiceD' => $possibleAnswers[3],
-            'choiceE' => $possibleAnswers[4]
         ])->getData();
 
     }

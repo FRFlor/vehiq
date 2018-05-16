@@ -18,7 +18,7 @@ class QuestionsTableSeeder extends Seeder
         {
             factory(Question::class)->create([
                 'statement' => 'This is question '.$i,
-                'rightAnswer' => 'Right Alternative of question '
+                'rightAnswer' => 'Right One'
             ]);
         }
     }

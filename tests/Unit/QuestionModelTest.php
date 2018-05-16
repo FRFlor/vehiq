@@ -10,23 +10,19 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class QuestionModelTest extends TestCase
 {
-    public function testItProducesShuffledJsonWithoutLoss()
+    public function testItShufflesWithoutLoss()
     {
         $testQuestion = factory(Question::class)->make();
 
-        $questionAsShuffledJson = $testQuestion->getShuffledJson();
+        $shuffled = [
+            $testQuestion->shuffledAnswers->choiceA,
+            $testQuestion->shuffledAnswers->choiceB,
+            $testQuestion->shuffledAnswers->choiceC,
+            $testQuestion->shuffledAnswers->choiceD,
+            $testQuestion->shuffledAnswers->choiceE
+            ];
 
-        $jsonElements = [
-            $questionAsShuffledJson->statement,
-            $questionAsShuffledJson->choiceA,
-            $questionAsShuffledJson->choiceB,
-            $questionAsShuffledJson->choiceC,
-            $questionAsShuffledJson->choiceD,
-            $questionAsShuffledJson->choiceE,
-        ];
-
-        $modelElements = [
-            $testQuestion->statement,
+        $original = [
             $testQuestion->rightAnswer,
             $testQuestion->wrongAnswer1,
             $testQuestion->wrongAnswer2,
@@ -35,7 +31,7 @@ class QuestionModelTest extends TestCase
         ];
 
         // Assert the shuffledJson has all the elements of the question
-        $this->assertEquals(count($jsonElements), count(array_intersect($jsonElements, $modelElements)));
+        $this->assertEquals(count($shuffled), count(array_intersect($shuffled, $original)));
 
     }
 
@@ -50,6 +46,23 @@ class QuestionModelTest extends TestCase
         $this->assertTrue($testQuestion->isAnswerRight($rightAnswer));
 
         $this->assertFalse($testQuestion->isAnswerRight($wrongAnswer));
+    }
+
+    public function testApiRightAnswer()
+    {
+        $testQuestion = Question::find(1);
+
+        // Test Api detects a wrong answer properly
+        $getStr = '/api/question/testAnswer?id='.$testQuestion->id."&answer=".$testQuestion->wrongAnswer1;
+        $response = $this->getJson($getStr);
+        $response->assertJsonFragment(['isAnswerRight'=>false]);
+
+        // Test Api detects a right answer properly
+        $getStr = '/api/question/testAnswer?id='.$testQuestion->id."&answer=".$testQuestion->rightAnswer;
+        $response = $this->getJson($getStr);
+        $response->assertJsonFragment(['isAnswerRight'=>true]);
+
+
     }
 
 }
