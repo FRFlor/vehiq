@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+    {{Auth::user()->name}}
 
+    <h1>Question {{$questionNumber}}:</h1>
     <h4>{{$question->statement}}</h4>
     <br/>
     <ul class="list-group">

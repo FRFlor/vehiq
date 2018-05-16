@@ -20,6 +20,11 @@ use Illuminate\Database\Eloquent\Model;
 class Question extends Model
 {
 
+    function game()
+    {
+        return $this->belongsTo('App\Game');
+    }
+
     // Checks if an answer given matches with this question's right answer
     function isAnswerRight($answer)
     {

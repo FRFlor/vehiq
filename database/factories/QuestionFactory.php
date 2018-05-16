@@ -5,8 +5,9 @@ use Faker\Generator as Faker;
 $factory->define(App\Question::class, function (Faker $faker) {
     return [
         'statement' => $faker->paragraph,
-        'rightAnswer' => $faker->lexify('Right Answer - ????????????????'),
-        'wrongAnswer1' => $faker->lexify('Wrong 1 - ????????????????'),
-        'wrongAnswer2' => $faker->lexify('Wrong 2 - ????????????????')
+        'game_Id' => App\Game::count(),
+        'rightAnswer' => $faker->sentence.'(Right One)',
+        'wrongAnswer1' => $faker->sentence,
+        'wrongAnswer2' => $faker->sentence
     ];
 });

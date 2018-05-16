@@ -16,10 +16,7 @@ class QuestionsTableSeeder extends Seeder
 
         foreach(range(1,$numberOfQuestions) as $i)
         {
-            factory(Question::class)->create([
-                'statement' => 'This is question '.$i,
-                'rightAnswer' => 'Right One'
-            ]);
+            factory(Question::class)->create();
         }
     }
 }

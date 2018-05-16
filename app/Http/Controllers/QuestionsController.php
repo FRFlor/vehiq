@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Question;
+use App\Game;
 
 class QuestionsController extends Controller
 {
@@ -18,12 +19,6 @@ class QuestionsController extends Controller
         return view('question.show', compact('question'));
     }
 
-    function askRandom()
-    {
-        $selectedQuestionId = rand(1,Question::count());
-        $question = Question::find($selectedQuestionId);
-        return view('question.ask', compact('question'));
-    }
 
     function testAnswer(Request $request)
     {
