@@ -1,18 +1,16 @@
-@extends('layouts.base')
+@extends('layouts.app')
 
 @section('content')
-    @if(empty($playerName))
-        <script>registerPlayer();</script>
-    @endif
+
     <h4>{{$question->statement}}</h4>
     <br/>
     <ul class="list-group">
         @foreach($question->shuffledAnswers as $alternative)
             <li class="list-unstyled">
 
-                <?php $onClickCall = "tryAnswer('" . $question->id . "','" . $alternative . "')";                    ?>
+                <?php $onClickCall = "tryAnswer('" . $question->id . "','" . $alternative . "')"; ?>
 
-                <button id="answerButton" class="btn-sm btn-block" onclick="{{$onClickCall}}">{{$alternative}}</button>
+                <button class="btn-sm btn-block m-1" onclick="{{$onClickCall}}">{{$alternative}}</button>
 
 
             </li>

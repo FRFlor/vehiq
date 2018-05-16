@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Seeder;
 
-class PlayersTableSeeder extends Seeder
+class UsersTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -11,11 +11,11 @@ class PlayersTableSeeder extends Seeder
      */
     public function run()
     {
-        $numberOfPlayers = 5;
+        $numberOfUsers = 5;
 
-        foreach(range(1,$numberOfPlayers) as $i)
+        foreach(range(1,$numberOfUsers) as $i)
         {
-            factory(App\Player::class)->create();
+            factory(App\User::class)->create();
         }
     }
 }
