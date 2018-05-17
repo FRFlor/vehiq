@@ -24,6 +24,13 @@ class Game extends Model
             ->first();
     }
 
+    function getIsOverAttribute()
+    {
+        return ($this->currentQuestionNumber > $this->numberOfQuestions);
+
+        // TODO: Game is also over when all players are disqualified!
+    }
+
     function getAllQuestionsAttribute()
     {
         return $this->questions()->orderBy('id','ASC')->get();
@@ -49,13 +56,15 @@ class Game extends Model
 
     public function gotoNextQuestion()
     {
+        $isThereAnotherQuestion = false;
+
         $this->currentQuestionNumber++;
 
-        if ($this->currentQuestionNumber > $this->numberOfQuestions)
+        if (!$this->isOver)
         {
-            $this->currentQuestionNumber = 1;
+            $isThereAnotherQuestion = true;
         }
 
-        return $this->save();
+        return ($this->save() && $isThereAnotherQuestion);
     }
 }

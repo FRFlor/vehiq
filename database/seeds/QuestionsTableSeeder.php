@@ -12,7 +12,7 @@ class QuestionsTableSeeder extends Seeder
      */
     public function run()
     {
-        $numberOfQuestions = 10;
+        $numberOfQuestions = 12;
 
         foreach(range(1,$numberOfQuestions) as $i)
         {

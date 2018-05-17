@@ -18,7 +18,8 @@ Route::get('/', function () {
 
 Route::get('/question/index','QuestionsController@index');
 Route::get('/question/{question}','QuestionsController@show');
-Route::get('/play', 'GameController@askNextQuestion');
+//Route::get('/play', 'GameController@askNextQuestion');
+Route::get('play', 'GameController@playGame');
 
 Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');

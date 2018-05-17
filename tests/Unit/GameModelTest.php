@@ -17,11 +17,12 @@ class GameModelTest extends TestCase
     public function testExample()
     {
         $currentGame = Game::currentGame();
+        $currentGame->currentQuestionNumber = 1;
         $currentQuestion = $currentGame->currentQuestion;
-        $this->assertEquals($currentQuestion->id, 5);
+        $this->assertEquals($currentQuestion->id, 1);
         $currentGame->gotoNextQuestion();
         $currentQuestion = $currentGame->currentQuestion;
-        $this->assertEquals($currentQuestion->id, 6);
+        $this->assertEquals($currentQuestion->id, 2);
 
     }
 }
