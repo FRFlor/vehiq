@@ -9,17 +9,15 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class GameModelTest extends TestCase
 {
-    /**
-     * A basic test example.
-     *
-     * @return void
-     */
-    public function testExample()
+    // Will the Game Model properly go for the next question it contains every time gotoNextQuestion() is called?
+    public function testItFetchesNextQuestion()
     {
         $currentGame = Game::currentGame();
         $currentGame->currentQuestionNumber = 1;
+
         $currentQuestion = $currentGame->currentQuestion;
         $this->assertEquals($currentQuestion->id, 1);
+
         $currentGame->gotoNextQuestion();
         $currentQuestion = $currentGame->currentQuestion;
         $this->assertEquals($currentQuestion->id, 2);

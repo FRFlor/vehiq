@@ -9,11 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class UserModelTest extends TestCase
 {
-    /**
-     * A basic test example.
-     *
-     * @return void
-     */
+    // Will the User Model properly keep track of the users score?
     public function testItKeepsScore()
     {
         // Reset the test ground
@@ -32,6 +28,7 @@ class UserModelTest extends TestCase
     }
 
 
+    // Will the User Model properly obtain the list of users that have the maximum score?
     public function testItCalculatesLead()
     {
         // Reset the test ground

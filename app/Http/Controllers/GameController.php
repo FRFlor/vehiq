@@ -45,19 +45,13 @@ class GameController extends Controller
                 'statement' => $question->statement,
                 'choices' => $question->shuffledAnswers,
             ];
-        }
 
-
-
-        // Pass to the view
-        if ($isThereAnotherQuestion)
-        {
             return view('game.askQuestion', compact('questionData'));
         }
-        else
-        {
-            return view('game.notPlaying');
-        }
+
+
+
+        return view('game.notPlaying');
 
     }
 

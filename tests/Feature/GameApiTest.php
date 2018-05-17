@@ -9,13 +9,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class GameApiTest extends TestCase
 {
-    /**
-     * A basic test example.
-     *
-     * @return void
-     */
-    public function testApiAnswerQuestion()
+    // Will the API properly inform if the answer given is Right or Wrong?
+    public function testItRecognizesRightAnswers()
     {
+
         $currentGame = Game::currentGame();
         $userId = 1;
         $answerGiven =  $currentGame->currentQuestion->wrongAnswer1;
@@ -38,5 +35,12 @@ class GameApiTest extends TestCase
         ]);
 
         $response->assertJsonFragment(['isAnswerRight'=>true]);
+    }
+
+
+    // Will the API properly update the counter column (rightAnswerCounter, wrongAnswer1Counter, ...) at the correct question row?
+    public function testItUpdatesTheChoicesCounters()
+    {
+
     }
 }

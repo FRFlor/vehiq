@@ -15,11 +15,8 @@
         <ul class="list-group">
             @foreach($questionData['choices'] as $alternative)
                 <li class="list-unstyled">
-
                     <?php $onClickCall = "tryAnswer('" . $questionData['id'] . "','" . $alternative . "')"; ?>
-
                     <button class="btn-sm btn-block m-1" onclick="{{$onClickCall}}">{{$alternative}}</button>
-
                 </li>
             @endforeach
         </ul>
