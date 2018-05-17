@@ -11,38 +11,9 @@ use Illuminate\Support\Facades\Auth;
 
 class GameController extends Controller
 {
-       static $currentQuestion = 0;
-
-
-       function resetPlayingField()
-       {
-           Player::truncate();
-           Game::truncate();
-       }
-
-
-       function startGame($delayInSeconds, $secondsPerQuestion = 10)
-       {
-            $startTime = Carbon::now()->addSeconds($delayInSeconds);
-
-       }
-
-
-       function endGame()
-       {
-           Player::truncate();
-       }
-
-
-    function askRandom()
-    {
-        $selectedQuestionId = rand(1,Question::count());
-        $question = Question::find($selectedQuestionId);
-        return view('game.askQuestion', compact('question'));
-    }
-
     function playGame()
     {
+        // The game can only be played if the user that requested is not yet disqualified
         if (Auth::user()->isDisqualified ||
             Game::currentGame()->isOver)
         {

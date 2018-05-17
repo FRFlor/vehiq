@@ -31,6 +31,7 @@ class Game extends Model
         // TODO: Game is also over when all players are disqualified!
     }
 
+
     function getAllQuestionsAttribute()
     {
         return $this->questions()->orderBy('id','ASC')->get();
@@ -65,6 +66,10 @@ class Game extends Model
             $isThereAnotherQuestion = true;
         }
 
+        // goToNextQuestion fails if:
+        //  - Writing to the database fails
+        //              or
+        //  - There are no more questions to be fetched
         return ($this->save() && $isThereAnotherQuestion);
     }
 }

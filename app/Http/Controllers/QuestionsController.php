@@ -20,17 +20,4 @@ class QuestionsController extends Controller
     }
 
 
-    function testAnswer(Request $request)
-    {
-        $questionId = $request->get('id');
-        $answerProvided = $request->get('answer');
-
-        $question = Question::findOrFail($questionId);
-
-        return response()->json([
-            'isAnswerRight' => $question->isAnswerRight($answerProvided)
-        ],Response::HTTP_OK);
-    }
-
-
 }

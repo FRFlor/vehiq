@@ -9,7 +9,5 @@
         <li>{{$question->rightAnswer}}</li>
         <li>{{$question->wrongAnswer1}}</li>
         <li>{{$question->wrongAnswer2}}</li>
-        <li>{{$question->wrongAnswer3}}</li>
-        <li>{{$question->wrongAnswer4}}</li>
     </ul>
 @endsection
