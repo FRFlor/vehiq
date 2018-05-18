@@ -6,9 +6,7 @@
     $question = App\Game::currentGame()->currentQuestion;
     ?>
 
-    @if(Auth::user()->isDisqualified)
-        <h2>Get out of here, loser!</h2>
-    @else
+    @if(!Auth::user()->isDisqualified)
         <h1>Question {{$questionData['questionNumber']}}:</h1>
         <h4>{{$questionData['statement']}}</h4>
         <br/>
@@ -26,18 +24,12 @@
     <script>
         function tryAnswer(questionId, answerStr) {
 
-            window.axios.post("/api/game/answerQuestion",
+            window.axios.post("/game/answerQuestion",
                 {
-                    userId: {{Auth::user()->id}},
                     answerGiven: answerStr
                 }).then(function (response) {
                 if (response.status === 200) {
-                    if (response.data.isAnswerRight) {
-                        window.location.replace('/play');
-                    }
-                    else {
-                        window.location.replace('/play');
-                    }
+                    window.location.replace('/play');
                 }
                 else {
                     alert("Api Failed to respond!");

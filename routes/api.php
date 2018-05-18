@@ -18,4 +18,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::get('question/testAnswer', 'QuestionsController@testAnswer');
-Route::post('game/answerQuestion', 'GameController@answerQuestion');
+
+Route::post('/game/answerQuestion', 'GameController@answerQuestion');
+
+

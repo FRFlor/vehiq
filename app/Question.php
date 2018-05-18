@@ -32,7 +32,7 @@ class Question extends Model
     }
 
 
-    // There has to be a better way...
+    // TODO: There has to be a better way...
     function registerAnswer($answer)
     {
         if(trim($answer) === trim($this->rightAnswer))

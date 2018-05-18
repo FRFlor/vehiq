@@ -16,7 +16,8 @@ class QuestionsController extends Controller
 
     function show(Question $question)
     {
-        return view('question.show', compact('question'));
+        // TODO: Do not send model
+        return view('question.show', ['question' => $question]);
     }
 
 

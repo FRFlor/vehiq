@@ -13,7 +13,7 @@ class UserModelTest extends TestCase
     public function testItKeepsScore()
     {
         // Reset the test ground
-        User::truncate();
+        $this->seed();
         $this->assertEquals(User::topScore(), 0); // Top Score is equal to 0
 
         $this->seed("UsersTableSeeder");
@@ -32,9 +32,7 @@ class UserModelTest extends TestCase
     public function testItCalculatesLead()
     {
         // Reset the test ground
-        User::truncate();
-
-        $this->seed("UsersTableSeeder");
+        $this->seed();
 
         $player1 = User::find(1);
         $player2 = User::find(2);

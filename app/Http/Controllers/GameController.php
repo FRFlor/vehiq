@@ -13,10 +13,14 @@ class GameController extends Controller
 {
     function playGame()
     {
+        if (Auth::user() === null)
+        {
+            return view('welcome');
+        }
+
         // The game can only be played if the user that requested is not yet disqualified
         if (Auth::user()->isDisqualified ||
-            Game::currentGame()->isOver)
-        {
+            Game::currentGame()->isOver) {
             return view('game.notPlaying');
         }
 
@@ -31,24 +35,20 @@ class GameController extends Controller
         $isThereAnotherQuestion = $currentGame->gotoNextQuestion();
 
 
-        if ($isThereAnotherQuestion)
-        {
+        if ($isThereAnotherQuestion) {
             $question = $currentGame->currentQuestion;
 
             // Get only the necessary attributes
             // Obs: questionNumber is the number of the question within the quiz
             //      For example, Question 2 of 12
             //                  (questionNumber == 2)
-            $questionData = [
+            return view('game.askQuestion',['questionData' => [
                 'id' => $question->id,
                 'questionNumber' => $currentGame->currentQuestionNumber,
                 'statement' => $question->statement,
                 'choices' => $question->shuffledAnswers,
-            ];
-
-            return view('game.askQuestion', compact('questionData'));
+            ]]);
         }
-
 
 
         return view('game.notPlaying');
@@ -59,31 +59,38 @@ class GameController extends Controller
     function answerQuestion(Request $request)
     {
         // Fetch the data from the request
-        $userId = $request->input('userId');
         $answerGiven = $request->input('answerGiven');
 
         // Collect the models
-        $currentPlayer = User::find($userId);
         $currentGame = Game::currentGame();
 
+        if($currentGame->isOver)
+        {
+            return 0; //TODO: Make a proper return
+        }
         // Update the answers counters for the target question
         $currentGame->currentQuestion->registerAnswer($answerGiven);
 
         // See if the answer was correct
-        $isAnswerRight = $currentGame->currentQuestion->isAnswerRight($answerGiven);
 
-        if ($isAnswerRight)
-        {
-            $currentPlayer->incrementScore();
+        if ( ! $currentGame->currentQuestion->isAnswerRight($answerGiven)) {
+
+            Auth::user()->disqualify();
+
+            return response()->json([
+                'isAnswerRight' => false
+            ], Response::HTTP_OK);
+
         }
-        else
-        {
-            $currentPlayer->disqualify();
-        }
+
+
+        Auth::user()->incrementScore();
 
         return response()->json([
-            'isAnswerRight' => $isAnswerRight
-        ],Response::HTTP_OK);
+            'isAnswerRight' => true
+        ], Response::HTTP_OK);
+
+
     }
 
 }
