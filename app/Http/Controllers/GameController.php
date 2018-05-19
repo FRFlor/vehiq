@@ -87,7 +87,7 @@ class GameController extends Controller
 
     }
 
-
+    // from api-authentication
     function answerQuestion(Request $request)
     {
         // Fetch the data from the request
