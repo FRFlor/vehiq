@@ -87,7 +87,7 @@ class GameController extends Controller
 
     }
 
-
+    //test
     function answerQuestion(Request $request)
     {
         // Fetch the data from the request
