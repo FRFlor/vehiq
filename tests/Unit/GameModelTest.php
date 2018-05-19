@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Carbon\Carbon;
 use App\User;
 use App\Game;
 use Tests\TestCase;
@@ -50,6 +51,43 @@ class GameModelTest extends TestCase
         ]);
 
         $response->assertJsonFragment(['isAnswerRight'=>true]);
+    }
+
+
+    public function testItReturnsSecondsToNextGame(){
+        $this->seed();
+
+        // Comment Fill is update() without the save() step
+
+        // Testing API acts accordingly when receiving an specific gameId
+        Game::find(1)->update(['startTime'=> Carbon::now()->addSeconds(120)]);
+
+        $response = $this->getJson('/api/game/secondsToGame?gameId=1');
+        $response->assertJsonFragment(['secondsToGame' => 120]);
+
+
+        // Testing Api knows how to fetch the latest created game if no gameId is provided
+        Game::create([
+            'startTime' => Carbon::now()->addSeconds(52)
+        ]);
+
+        $response = $this->getJson('/api/game/secondsToGame');
+        $response->assertJsonFragment(['secondsToGame' => 52]);
+
+
+
+
+
+        // Testing Api handles when the gameId is provided but empty
+        Game::create([
+            'startTime' => Carbon::now()->addSeconds(78)
+        ]);
+
+        $response = $this->getJson('/api/game/secondsToGame?gameId=');
+        $response->assertJsonFragment(['secondsToGame' => 78]);
+
+
+
     }
 
 }

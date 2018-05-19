@@ -17,6 +17,29 @@ window.Vue = require('vue');
 
 Vue.component('example-component', require('./components/ExampleComponent.vue'));
 
+Vue.component('game-timer', require('./components/GameTimer.vue'));
+Vue.component('question', require('./components/Question.vue'));
+Vue.component('game-session', require('./components/GameSession.vue'));
+
 const app = new Vue({
-    el: '#app'
+    el: '#app',
+    data:{
+        gameState: 'waiting',
+    },
+    methods:{
+        updateState(newState)
+        {
+            this.gameState = newState;
+        },
+
+        // If targetGameId == null, the time for the next game will be fetched
+        secondsToGame()
+        {
+            return window.axios.get( `/api/game/secondsToGame?gameId=${gameId}`).then(function (response) {
+                if (response.status === 200) {
+                    return response.data.secondsToGame;
+                }
+            });
+        },
+    },
 });

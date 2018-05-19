@@ -13,20 +13,52 @@ class GameController extends Controller
 {
     function playGame()
     {
-        if (Auth::user() === null)
-        {
+        if (Auth::user() === null) {
             return view('welcome');
         }
 
-        // The game can only be played if the user that requested is not yet disqualified
-        if (Auth::user()->isDisqualified ||
-            Game::currentGame()->isOver) {
-            return view('game.notPlaying');
-        }
-
-        return $this->askNextQuestion();
+        return view('game.play', [
+            'secondsToGame' => Game::currentGame()->secondsUntilStart
+        ]);
     }
 
+    function getSecondsToGame(Request $request)
+    {
+        $gameId = $request->get('gameId');
+        if ($gameId === null) {
+            return response()->json([
+                'secondsToGame' => Game::currentGame()->secondsUntilStart
+            ], response::HTTP_OK);
+        }
+
+        return response()->json([
+            'secondsToGame' => Game::findOrFail($gameId)->secondsUntilStart
+        ], response::HTTP_OK);
+    }
+
+    function getCurrentQuestion()
+    {
+        $currentGame = Game::currentGame();
+
+        // Retrieve the models
+        if ($currentGame->isOver) {
+            return null;
+        }
+
+        $question = $currentGame->currentQuestion;
+
+        // Get only the necessary attributes
+        // Obs: questionNumber is the number of the question within the quiz
+        //      For example, Question 2 of 12
+        //                  (questionNumber == 2)
+        return response()->json([
+            'id' => $question->id,
+            'questionNumber' => $currentGame->currentQuestionNumber,
+            'statement' => $question->statement,
+            'choices' => $question->shuffledAnswers,
+        ], response::HTTP_OK);
+
+    }
 
     function askNextQuestion()
     {
@@ -42,7 +74,7 @@ class GameController extends Controller
             // Obs: questionNumber is the number of the question within the quiz
             //      For example, Question 2 of 12
             //                  (questionNumber == 2)
-            return view('game.askQuestion',['questionData' => [
+            return view('game.askQuestion', ['questionData' => [
                 'id' => $question->id,
                 'questionNumber' => $currentGame->currentQuestionNumber,
                 'statement' => $question->statement,
@@ -64,16 +96,14 @@ class GameController extends Controller
         // Collect the models
         $currentGame = Game::currentGame();
 
-        if($currentGame->isOver)
-        {
+        if ($currentGame->isOver) {
             return 0; //TODO: Make a proper return
         }
         // Update the answers counters for the target question
         $currentGame->currentQuestion->registerAnswer($answerGiven);
 
         // See if the answer was correct
-
-        if ( ! $currentGame->currentQuestion->isAnswerRight($answerGiven)) {
+        if (!$currentGame->currentQuestion->isAnswerRight($answerGiven)) {
 
             Auth::user()->disqualify();
 
@@ -86,10 +116,20 @@ class GameController extends Controller
 
         Auth::user()->incrementScore();
 
+
+        $currentGame->gotoNextQuestion();
+
         return response()->json([
             'isAnswerRight' => true
         ], Response::HTTP_OK);
 
+
+    }
+
+
+    function notifyTimeOut()
+    {
+        $currentGame = Game::currentGame();
 
     }
 

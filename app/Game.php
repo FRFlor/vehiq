@@ -2,10 +2,13 @@
 
 namespace App;
 
+use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 
 class Game extends Model
 {
+    protected $fillable = ['startTime','secondsPerQuestion','currentQuestionNumber'];
     function questions()
     {
         return $this->hasMany('App\Question');
@@ -51,6 +54,12 @@ class Game extends Model
         $newGame->secondsPerQuestion = $secondsPerQuestion;
 
         return $newGame->save();
+    }
+
+
+    public function getSecondsUntilStartAttribute(){
+
+        return Carbon::now()->diffInSeconds($this->startTime,false);
     }
 
 

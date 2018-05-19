@@ -2,9 +2,10 @@
 
 @section('content')
     <p>{{Auth::user()->name}}: {{Auth::user()->score}}</p>
-    <?php
-    $question = App\Game::currentGame()->currentQuestion;
-    ?>
+    <div>
+        @{{gameState}}
+        <game-timer :start-seconds="secondsToGame()" @time-expired="updateState('playing')"></game-timer>
+    </div>
 
     @if(!Auth::user()->isDisqualified)
         <h1>Question {{$questionData['questionNumber']}}:</h1>
