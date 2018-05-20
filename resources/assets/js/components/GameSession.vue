@@ -64,8 +64,7 @@
                     return false;
                 }
 
-                axios.post(`${this.url}/api/game/answerQuestion`,
-                    {
+                axios.post(`${this.url}/api/game/answerQuestion`,{
                         userSecretToken: this.userSecret,
                         answerGiven: answerStr
                     }).then((response) => {
@@ -89,10 +88,9 @@
                                 redirect: this.url,
                             }).then(() => {
                                 // With token now created, re-attempt to retrieve said token
-                                this.getUserSecret();
+                                this.getUserSecret(); //TODO: Ask Dan if Recursion is frowned upon
                             });
-                        }
-                        ;
+                        };
 
                         // Secret successfully received, save it!
                         this.userSecret = getAuthResponse.data[0].secret;

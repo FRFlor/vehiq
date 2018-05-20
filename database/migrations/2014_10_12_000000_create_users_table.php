@@ -19,8 +19,6 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->rememberToken();
-            $table->integer('score')->default(0);
-            $table->boolean('isDisqualified')->default(false);
             $table->timestamps();
         });
     }

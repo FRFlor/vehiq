@@ -11,11 +11,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        App\Question::truncate();
-//        App\User::truncate();
-        App\Game::truncate();
-//        $this->call(UsersTableSeeder::class);
+        $this->call(UsersTableSeeder::class);
         $this->call(GamesTableSeeder::class);
         $this->call(QuestionsTableSeeder::class);
+
+
     }
 }

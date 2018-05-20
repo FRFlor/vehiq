@@ -95,36 +95,16 @@ class GameController extends Controller
         $answerGiven = $request->input('answerGiven');
 
         // Collect the models
-        $currentGame = Game::currentGame();
         $currentUser = User::findBySecretToken($userSecret);
 
-        // Update the answers counters for the target question
-        $currentGame->currentQuestion->registerAnswer($answerGiven);
-
-        // See if the answer was correct
-        if (!$currentGame->currentQuestion->isAnswerRight($answerGiven)) {
-
-            $currentUser->disqualify();
-
-            return response()->json([
-                'isAnswerRight' => false,
-                'currentScore' => $currentUser->score
-            ], Response::HTTP_OK);
-
-        }
+        $currentUser->answerQuestion($answerGiven);
 
 
-        $currentUser->incrementScore();
-
-
-        $currentGame->gotoNextQuestion();
-
+        // TODO: Remove this response
         return response()->json([
             'isAnswerRight' => true,
-            'currentScore' => $currentUser->score
+            'currentScore' => 0
         ], Response::HTTP_OK);
-
-
     }
 
 

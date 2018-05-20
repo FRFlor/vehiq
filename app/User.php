@@ -29,55 +29,69 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
-
-    function incrementScore()
+    function games()
     {
-        $this->score++;
-        return $this->save();
+        return $this->belongsToMany(Game::class);
     }
 
-    function disqualify()
+    function questions()
     {
-        $this->isDisqualified = true;
-        return $this->save();
+        return $this->belongsToMany(Question::class)->withPivot('answerGiven');
     }
 
     static function findBySecretToken($secret)
     {
+        // Student Note: Ideally Eloquent Relationship should be used here
+        // but I didn't want to create a Model for the oauth_client. Also,
+        // It's nice to see usage of the DB object as well
         $userId = DB::table('users')
-            ->join('oauth_clients','users.id','=','oauth_clients.user_id')
-            ->where('oauth_clients.secret','=',$secret)
+            ->join('oauth_clients', 'users.id', '=', 'oauth_clients.user_id')
+            ->where('oauth_clients.secret', '=', $secret)
             ->pluck('users.id')
             ->first();
 
         return static::find($userId);
     }
 
-    static function scopeQualified($query)
+    function getScoreAttribute()
     {
-        return $query->where('isDisqualified',false);
-    }
+        $gameId = Game::currentGame($this->id)->id;
 
-    static function topScore()
-    {
-        $topPlayer = static::qualified()->orderby('score','DESC')->take(1)->get();
-
-        $highScore = 0;
-
-        // If there is a top player
-        if ($topPlayer->count() > 0)
+        $score = 0;
+        foreach($this->questions as $userResponse)
         {
-            $highScore = $topPlayer[0]->score;
+            if($userResponse->game_Id == $gameId &&
+                trim($userResponse->rightAnswer) == trim($userResponse->pivot->answerGiven))
+            {
+                $score++;
+            }
         }
 
-        return $highScore;
+        return $score;
     }
 
-    static function lead()
-    {
-        $highScore = static::topScore();
 
-        // There might be more than 1 player on the lead
-        return static::qualified()->where('score',$highScore)->get();
+    function getIsDisqualifiedAttribute()
+    {
+        $gameId = Game::currentGame($this->id)->id;
+
+        $isDisqualified = false;
+        foreach($this->questions as $userResponse) {
+            if ($userResponse->game_Id == $gameId &&
+                trim($userResponse->rightAnswer) != trim($userResponse->pivot->answerGiven)) {
+                $isDisqualified = true;
+                break;
+            }
+        }
+
+        return $isDisqualified;
+    }
+
+
+    function answerQuestion($answerGiven)
+    {
+        return $this->questions()
+            ->save(Game::currentGame($this->id)->currentQuestion,
+            ['answerGiven' => $answerGiven]);
     }
 }

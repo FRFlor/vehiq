@@ -19,10 +19,15 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Question extends Model
 {
+    function users()
+    {
+        return $this->belongsToMany(User::class)->withPivot('answerGiven');
+    }
+
 
     function game()
     {
-        return $this->belongsTo('App\Game');
+        return $this->belongsTo(Game::class);
     }
 
     // Checks if an answer given matches with this question's right answer
@@ -30,28 +35,6 @@ class Question extends Model
     {
         return trim($answer) === trim($this->rightAnswer);
     }
-
-
-    // TODO: There has to be a better way...
-    function registerAnswer($answer)
-    {
-        if(trim($answer) === trim($this->rightAnswer))
-        {
-            $this->rightAnswerCount++;
-        }
-        else if(trim($answer) === trim($this->wrongAnswer1))
-        {
-            $this->wrongAnswer1Count++;
-        }
-        else if(trim($answer) === trim($this->wrongAnswer2))
-        {
-            $this->wrongAnswer2Count++;
-        }
-
-
-        return $this->save();
-    }
-
 
 
     function getShuffledAnswersAttribute()
@@ -70,6 +53,38 @@ class Question extends Model
             'choiceC' => $possibleAnswers[2],
         ])->getData();
 
+    }
+
+    function getAnswerSelectionCountAttribute()
+    {
+        $rightAnswerCount = 0;
+        $wrongAnswer1Count = 0;
+        $wrongAnswer2Count = 0;
+
+        foreach($this->users as $userResponse)
+        {
+            switch(trim($userResponse->pivot->answerGiven))
+            {
+                case trim($this->rightAnswer):
+                    $rightAnswerCount++;
+                    break;
+                case trim($this->wrongAnswer1):
+                    $wrongAnswer1Count++;
+                    break;
+                case trim($this->wrongAnswer2):
+                    $wrongAnswer2Count++;
+                    break;
+            }
+        }
+
+        return [
+            ['answerText' => $this->rightAnswer,
+                'count' => $rightAnswerCount],
+            ['answerText' => $this->wrongAnswer1,
+                'count' => $wrongAnswer1Count],
+            ['answerText' => $this->wrongAnswer2,
+                'count' => $wrongAnswer2Count],
+        ];
     }
 
 }

@@ -5,18 +5,38 @@ namespace App;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Game extends Model
 {
     protected $fillable = ['startTime','secondsPerQuestion','currentQuestionNumber'];
     function questions()
     {
-        return $this->hasMany('App\Question');
+        return $this->hasMany(Question::class);
     }
 
-    static function currentGame()
+    function users()
     {
-        return static::orderBy('id','DESC')->first();
+        return $this->belongsToMany(User::class);
+    }
+
+    static function currentGame($userId = null)
+    {
+        if ($userId == null)
+        {
+            return static::orderBy('id','DESC')->first();
+        }
+
+
+        $gameId = DB::table('games')
+            ->join('game_user', 'games.id', '=', 'game_user.game_id')
+            ->where('game_user.user_id', '=', $userId)
+            ->orderBy('games.id','DESC')
+            ->pluck('games.id')
+            ->first();
+
+        return static::find($gameId);
+
     }
 
     function getCurrentQuestionAttribute()
@@ -43,17 +63,6 @@ class Game extends Model
     function getNumberOfQuestionsAttribute()
     {
         return $this->questions()->count();
-    }
-
-    //
-    function createGame($startTime, $secondsPerQuestion = 10)
-    {
-        $newGame = new Game();
-
-        $newGame->startTime = $startTime;
-        $newGame->secondsPerQuestion = $secondsPerQuestion;
-
-        return $newGame->save();
     }
 
 
