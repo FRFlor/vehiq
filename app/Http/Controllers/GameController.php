@@ -87,41 +87,41 @@ class GameController extends Controller
 
     }
 
-    // added another thing
-    // from api-authentication
+
     function answerQuestion(Request $request)
     {
         // Fetch the data from the request
+        $userSecret = $request->input('userSecretToken');
         $answerGiven = $request->input('answerGiven');
 
         // Collect the models
         $currentGame = Game::currentGame();
+        $currentUser = User::findBySecretToken($userSecret);
 
-        if ($currentGame->isOver) {
-            return 0; //TODO: Make a proper return
-        }
         // Update the answers counters for the target question
         $currentGame->currentQuestion->registerAnswer($answerGiven);
 
         // See if the answer was correct
         if (!$currentGame->currentQuestion->isAnswerRight($answerGiven)) {
 
-            Auth::user()->disqualify();
+            $currentUser->disqualify();
 
             return response()->json([
-                'isAnswerRight' => false
+                'isAnswerRight' => false,
+                'currentScore' => $currentUser->score
             ], Response::HTTP_OK);
 
         }
 
 
-        Auth::user()->incrementScore();
+        $currentUser->incrementScore();
 
 
         $currentGame->gotoNextQuestion();
 
         return response()->json([
-            'isAnswerRight' => true
+            'isAnswerRight' => true,
+            'currentScore' => $currentUser->score
         ], Response::HTTP_OK);
 
 

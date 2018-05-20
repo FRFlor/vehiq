@@ -48,4 +48,13 @@ class UserModelTest extends TestCase
         $topUsers = User::lead();
         $this->assertEquals($topUsers->count(), 2);
     }
+
+
+
+    public function testItFindsUserBySecretToken()
+    {
+        $secret = 'P4gQUxdCiAvM4W25ivmTMFkap82QRIkOcJzFtXY5';
+        $userId = User::findBySecretToken($secret);
+        dd($userId);
+    }
 }
