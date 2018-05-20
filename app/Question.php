@@ -5,17 +5,32 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 
 
+
+
 /**
- * @property integer $id
+ * App\Question
+ *
+ * @property int $id
+ * @property int $gameId
  * @property string $statement
  * @property string $rightAnswer
  * @property string $wrongAnswer1
  * @property string $wrongAnswer2
- * @property string $rightAnswerCount
- * @property string $wrongAnswer1Count
- * @property string $wrongAnswer2Count
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Carbon\Carbon|null $createdAt
+ * @property \Carbon\Carbon|null $updatedAt
+ * @property-read \App\Game $games
+ * @property-read mixed $answerSelectionCount
+ * @property-read mixed $shuffledAnswers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\User[] $users
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereGameId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereRightAnswer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereStatement($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereWrongAnswer1($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Question whereWrongAnswer2($value)
+ * @mixin \Eloquent
  */
 class Question extends Model
 {

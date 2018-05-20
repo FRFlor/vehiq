@@ -7,6 +7,36 @@ use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
+// Student note::
+// To allow the quick creation of this property header I used:
+// https://github.com/barryvdh/laravel-ide-helper
+// Instructions: php artisan ide-helper:models Post --dir="App"
+
+
+/**
+ * App\Game
+ *
+ * @property int $id
+ * @property string $startTime
+ * @property int $secondsPerQuestion
+ * @property \Carbon\Carbon|null $createdAt
+ * @property \Carbon\Carbon|null $updatedAt
+ * @property-read mixed $areAllPlayersDisqualified
+ * @property-read mixed $currentQuestion
+ * @property-read mixed $currentQuestionNumber
+ * @property-read mixed $isOver
+ * @property-read mixed $numberOfQuestions
+ * @property-read mixed $secondsSinceStarted
+ * @property-read mixed $secondsUntilStart
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Question[] $questions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\User[] $users
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereSecondsPerQuestion($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Game extends Model
 {
     protected $fillable = ['startTime','secondsPerQuestion','currentQuestionNumber'];
@@ -52,12 +82,12 @@ class Game extends Model
             return static::NO_QUESTION_NUMBER;
         }
 
-        if ($this->isOver)
+        if ($this->secondsSinceStarted > $this->secondsPerQuestion * $this->questions->count())
         {   // Game has ended already
             return static::NO_QUESTION_NUMBER;
         }
 
-        return floor($this->secondsSinceStarted / $this->secondsPerQuestion);
+        return floor($this->secondsSinceStarted / $this->secondsPerQuestion)+1;
     }
 
     static function upcomingGame()
@@ -107,8 +137,8 @@ class Game extends Model
     function getIsOverAttribute()
     {
         // The time for all the questions has finished or all players already lost the game
-        if($this->secondsSinceStarted > $this->secondsPerQuestion * $this->questions->count() ||
-            $this->areAllPlayersDisqualified)
+        if(($this->secondsSinceStarted > 0 && $this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
+            || $this->areAllPlayersDisqualified)
         {
             return true;
         }
@@ -129,11 +159,6 @@ class Game extends Model
         return true;
     }
 
-    function getAllQuestionsAttribute()
-    {
-        return $this->questions()->orderBy('id','ASC')->get();
-    }
-
     function getNumberOfQuestionsAttribute()
     {
         return $this->questions()->count();
@@ -142,7 +167,11 @@ class Game extends Model
 
     public function getSecondsUntilStartAttribute(){
 
-        return Carbon::now()->diffInSeconds($this->startTime,false);
+        // TODO: Replace back with Carbon::now
+        //$fakeNow = new Carbon('11:12:00');
+        //$fakeNow = new Carbon('11:12:24');
+        $fakeNow = Carbon::now();
+        return $fakeNow->diffInSeconds($this->startTime,false);
     }
 
     public function getSecondsSinceStartedAttribute(){

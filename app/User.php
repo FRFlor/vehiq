@@ -7,6 +7,34 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 
+
+/**
+ * App\User
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string|null $rememberToken
+ * @property \Carbon\Carbon|null $createdAt
+ * @property \Carbon\Carbon|null $updatedAt
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[] $clients
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Game[] $games
+ * @property-read mixed $isCurrentInGame
+ * @property-read mixed $isDisqualified
+ * @property-read mixed $score
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Question[] $questions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Token[] $tokens
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, Notifiable;
@@ -75,6 +103,11 @@ class User extends Authenticatable
     {
         $currentGame = Game::currentGame($this->id);
 
+        if ($currentGame->secondsUntilStart > 0)
+        {
+            return false;
+        }
+
         // Check if there is one question wrong
         foreach($this->questions as $userResponse) {
             if ($userResponse->game_Id == $currentGame->id &&
@@ -84,7 +117,7 @@ class User extends Authenticatable
         }
 
         // Check if the player missed one question
-        if($this->questions->count() < $currentGame->currentQuestionNumber - 1 || $currentGame->isOver)
+        if($this->questions->count() < $currentGame->currentQuestionNumber - 1 && $currentGame->currentQuestionNumber != 0)
         {
             return true;
         }

@@ -94,7 +94,7 @@ class GameModelTest extends TestCase
         $user = User::find(6);
         $this->actingAs($user);
 
-        $userSecret = "u63KHkj1Ab6NB4MCcQwRvfua7EIeWuBM6tdFLb7Y";
+        $userSecret = "LNUvWV0oxQ2p66UGFTe9fp26HetWbvvOq9TciFWB";
 
         $response = $this->getJson("/api/game/getCurrentQuestion?userSecretToken=$userSecret");
 

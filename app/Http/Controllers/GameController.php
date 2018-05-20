@@ -69,12 +69,13 @@ class GameController extends Controller
 
         $currentGame = Game::currentGame($currentUser->id);
 
+        $question = $currentGame->currentQuestion;
 
-        if ($currentGame->isOver) {
-            return null;
+        if(!$question)
+        {
+            return response()->json([], response::HTTP_OK);
         }
 
-        $question = $currentGame->currentQuestion;
 
         // Get only the necessary attributes
         // Obs: questionNumber is the number of the question within the quiz
