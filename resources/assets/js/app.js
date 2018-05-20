@@ -22,20 +22,6 @@ Vue.component('question', require('./components/Question.vue'));
 Vue.component('game-session', require('./components/GameSession.vue'));
 
 
-Vue.component(
-    'passport-clients',
-    require('./components/passport/Clients.vue')
-);
-
-Vue.component(
-    'passport-authorized-clients',
-    require('./components/passport/AuthorizedClients.vue')
-);
-
-Vue.component(
-    'passport-personal-access-tokens',
-    require('./components/passport/PersonalAccessTokens.vue')
-);
 const app = new Vue({
     el: '#app',
     data:{
@@ -46,15 +32,23 @@ const app = new Vue({
         {
             this.gameState = newState;
         },
-
         // If targetGameId == null, the time for the next game will be fetched
         secondsToGame()
         {
-            return window.axios.get( `/api/game/secondsToGame?gameId=${gameId}`).then(function (response) {
+
+            if (this.userSecret === '') {
+                // If there's no user secret. Ignore the request.
+                console.log('User Secret is required to communicate with the API, answer request cannot be sent');
+                return false;
+            }
+
+            return window.axios.get( `/api/game/getSecondsToGame?userSecretToken=${this.userSecret}`).then(function (response) {
                 if (response.status === 200) {
                     return response.data.secondsToGame;
                 }
             });
         },
+    },
+    mounted(){
     },
 });

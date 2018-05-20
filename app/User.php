@@ -73,18 +73,23 @@ class User extends Authenticatable
 
     function getIsDisqualifiedAttribute()
     {
-        $gameId = Game::currentGame($this->id)->id;
+        $currentGame = Game::currentGame($this->id);
 
-        $isDisqualified = false;
+        // Check if there is one question wrong
         foreach($this->questions as $userResponse) {
-            if ($userResponse->game_Id == $gameId &&
+            if ($userResponse->game_Id == $currentGame->id &&
                 trim($userResponse->rightAnswer) != trim($userResponse->pivot->answerGiven)) {
-                $isDisqualified = true;
-                break;
+                return true;
             }
         }
 
-        return $isDisqualified;
+        // Check if the player missed one question
+        if($this->questions->count() < $currentGame->currentQuestionNumber - 1 || $currentGame->isOver)
+        {
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -93,5 +98,37 @@ class User extends Authenticatable
         return $this->questions()
             ->save(Game::currentGame($this->id)->currentQuestion,
             ['answerGiven' => $answerGiven]);
+    }
+
+    function getIsCurrentInGameAttribute()
+    {
+        foreach($this->games as $game)
+        {
+            if (!$game->isOver)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function enrollIntoGame()
+    {
+        // Is currently playing a game? Cannot enroll...
+        if ($this->isCurrentInGame)
+        {
+            return false;
+        }
+
+        $game = Game::upcomingGame();
+
+        // There are no new games available? Cannot enroll...
+        if (!$game)
+        {
+            return false;
+        }
+
+        return $this->games()->save($game);
     }
 }

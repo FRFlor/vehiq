@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 class Game extends Model
 {
     protected $fillable = ['startTime','secondsPerQuestion','currentQuestionNumber'];
+    const NO_QUESTION_NUMBER = 0;
+
     function questions()
     {
         return $this->hasMany(Question::class);
@@ -18,6 +20,56 @@ class Game extends Model
     function users()
     {
         return $this->belongsToMany(User::class);
+    }
+
+    static function createNewGame($secondsUntilStart = 120, $secondsPerQuestion = 10)
+    {
+        $newGame = new Game;
+        $newGame->startTime = Carbon::now()->addSeconds($secondsUntilStart);
+        $newGame->secondsPerQuestion = $secondsPerQuestion;
+
+        $newGame->save();
+
+        //TODO: Add questions to the game
+        for($i = 1; $i <= 12; $i++)
+        {
+            Question::addNewQuestionToGame(
+                $newGame->id,
+                "Is this a placeholder? $i",
+                "Right answer",
+                "Wrong Answer 1",
+                "Wrong Answer 2");
+        }
+
+    }
+
+
+    function getCurrentQuestionNumberAttribute()
+    {
+        // 1) Calculate how many seconds have passed
+        if($this->secondsSinceStarted < 0)
+        {   // Game hasn't started yet
+            return static::NO_QUESTION_NUMBER;
+        }
+
+        if ($this->isOver)
+        {   // Game has ended already
+            return static::NO_QUESTION_NUMBER;
+        }
+
+        return floor($this->secondsSinceStarted / $this->secondsPerQuestion);
+    }
+
+    static function upcomingGame()
+    {
+        $latestGame = static::currentGame();
+
+        if($latestGame->secondsUntilStart < 0)
+        {
+            return null;
+        }
+
+        return $latestGame;
     }
 
     static function currentGame($userId = null)
@@ -41,6 +93,11 @@ class Game extends Model
 
     function getCurrentQuestionAttribute()
     {
+        if ($this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
+        {
+            return null;
+        }
+
         return $this->questions()
             ->orderBy('id','ASC')
             ->skip($this->currentQuestionNumber-1)
@@ -49,11 +106,28 @@ class Game extends Model
 
     function getIsOverAttribute()
     {
-        return ($this->currentQuestionNumber > $this->numberOfQuestions);
+        // The time for all the questions has finished or all players already lost the game
+        if($this->secondsSinceStarted > $this->secondsPerQuestion * $this->questions->count() ||
+            $this->areAllPlayersDisqualified)
+        {
+            return true;
+        }
 
-        // TODO: Game is also over when all players are disqualified!
+        return false;
     }
 
+    function getAreAllPlayersDisqualifiedAttribute()
+    {
+        foreach($this->users as $player)
+        {
+            if (!$player->isDisqualified)
+            {   // At least one player is still playing
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     function getAllQuestionsAttribute()
     {
@@ -71,23 +145,8 @@ class Game extends Model
         return Carbon::now()->diffInSeconds($this->startTime,false);
     }
 
-
-
-    public function gotoNextQuestion()
-    {
-        $isThereAnotherQuestion = false;
-
-        $this->currentQuestionNumber++;
-
-        if (!$this->isOver)
-        {
-            $isThereAnotherQuestion = true;
-        }
-
-        // goToNextQuestion fails if:
-        //  - Writing to the database fails
-        //              or
-        //  - There are no more questions to be fetched
-        return ($this->save() && $isThereAnotherQuestion);
+    public function getSecondsSinceStartedAttribute(){
+        return (-1)*$this->secondsUntilStart;
     }
+
 }

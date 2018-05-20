@@ -25,7 +25,7 @@ class Question extends Model
     }
 
 
-    function game()
+    function games()
     {
         return $this->belongsTo(Game::class);
     }
@@ -36,6 +36,16 @@ class Question extends Model
         return trim($answer) === trim($this->rightAnswer);
     }
 
+    static function addNewQuestionToGame($gameId, $statement, $rightAnswer, $wrongAnswer1, $wrongAnswer2)
+    {
+        $question = new Question;
+        $question->statement = $statement;
+        $question->rightAnswer = $rightAnswer;
+        $question->wrongAnswer1 = $wrongAnswer1;
+        $question->wrongAnswer2 = $wrongAnswer2;
+
+        Game::find($gameId)->questions()->save($question);
+    }
 
     function getShuffledAnswersAttribute()
     {
