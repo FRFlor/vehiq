@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 // Student note::
 // To allow the quick creation of this property header I used:
 // https://github.com/barryvdh/laravel-ide-helper
-// Instructions: php artisan ide-helper:models Post --dir="App"
+// Instructions: php artisan ide-helper:models -R
 
 
 /**
@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read mixed $currentQuestionNumber
  * @property-read mixed $isOver
  * @property-read mixed $numberOfQuestions
+ * @property-read mixed $secondsRemainingInQuestion
  * @property-read mixed $secondsSinceStarted
  * @property-read mixed $secondsUntilStart
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Question[] $questions
@@ -119,6 +120,16 @@ class Game extends Model
 
         return static::find($gameId);
 
+    }
+
+    function getSecondsRemainingInQuestionAttribute()
+    {
+        if($this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
+        {
+            return 0;
+        }
+
+        return $this->currentQuestionNumber*$this->secondsPerQuestion - $this->secondsSinceStarted;
     }
 
     function getCurrentQuestionAttribute()

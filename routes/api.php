@@ -18,8 +18,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 
-Route::post('/game/notifyTimeOut', 'GameController@notifyTimeOut');
-
-Route::post('/game/answerQuestion', 'GameController@answerQuestion');
-Route::get('/game/getCurrentQuestion', 'GameController@getCurrentQuestion');
-Route::get('/game/getSecondsToGame', 'GameController@getSecondsToGame');
+Route::post('/game/joinGame','GameController@joinGame');
+Route::put('/game/answerQuestion', 'GameController@answerQuestion');
+Route::get('/game/getStatus','GameController@getStatus');

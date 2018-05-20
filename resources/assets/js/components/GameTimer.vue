@@ -15,8 +15,11 @@
             }
         },
         methods: {
+            setTimerTo(newSeconds){
+              this.remainingSeconds = newSeconds;
+            },
             resetTimer(){
-                this.remainingSeconds = this.startSeconds;
+                this.setTimerTo(this.startSeconds);
             },
             timerLoop() {
                 if (this.remainingSeconds > 0) {

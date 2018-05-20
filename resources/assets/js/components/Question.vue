@@ -13,7 +13,7 @@
 
 <script>
     export default {
-        props:['questionData'],
+        props:['questionData','isReadOnly'],
         data(){
             return {
             }
