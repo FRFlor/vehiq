@@ -14,8 +14,8 @@ class GameModelTest extends TestCase
     // Will the Game Model properly go for the next question it contains every time gotoNextQuestion() is called?
     public function testItFetchesNextQuestion()
     {
+        // TODO: correct for time-based selection
         $currentGame = Game::currentGame();
-        $currentGame->currentQuestionNumber = 1;
 
         $currentQuestion = $currentGame->currentQuestion;
         $this->assertEquals($currentQuestion->id, 1);
@@ -30,6 +30,8 @@ class GameModelTest extends TestCase
 
     public function testItAllowsAnsweringQuestions()
     {
+        // TODO: correct for time-based selection
+
         $this->seed();
         $user = User::find(1);
         $this->actingAs($user);

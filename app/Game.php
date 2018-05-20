@@ -167,11 +167,7 @@ class Game extends Model
 
     public function getSecondsUntilStartAttribute(){
 
-        // TODO: Replace back with Carbon::now
-        //$fakeNow = new Carbon('11:12:00');
-        //$fakeNow = new Carbon('11:12:24');
-        $fakeNow = Carbon::now();
-        return $fakeNow->diffInSeconds($this->startTime,false);
+        return Carbon::now()->diffInSeconds($this->startTime,false);
     }
 
     public function getSecondsSinceStartedAttribute(){

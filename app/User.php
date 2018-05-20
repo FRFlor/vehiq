@@ -128,6 +128,11 @@ class User extends Authenticatable
 
     function answerQuestion($answerGiven)
     {
+        // Someone that is disqualified cannot answer questions, only watch them
+        if($this->isDisqualified){
+            return false;
+        }
+
         return $this->questions()
             ->save(Game::currentGame($this->id)->currentQuestion,
             ['answerGiven' => $answerGiven]);
