@@ -17,12 +17,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('question/testAnswer', 'QuestionsController@testAnswer');
-
 
 Route::post('/game/notifyTimeOut', 'GameController@notifyTimeOut');
+
 Route::post('/game/answerQuestion', 'GameController@answerQuestion');
 Route::get('/game/getCurrentQuestion', 'GameController@getCurrentQuestion');
-
-
-Route::get('/game/secondsToGame', 'GameController@getSecondsToGame');
+Route::get('/game/getSecondsToGame', 'GameController@getSecondsToGame');

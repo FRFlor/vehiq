@@ -20,9 +20,6 @@ class CreateQuestionsTable extends Migration
             $table->string('rightAnswer');
             $table->string('wrongAnswer1');
             $table->string('wrongAnswer2');
-            $table->integer('rightAnswerCount')->default(0);
-            $table->integer('wrongAnswer1Count')->default(0);
-            $table->integer('wrongAnswer2Count')->default(0);
             $table->timestamps();
         });
     }

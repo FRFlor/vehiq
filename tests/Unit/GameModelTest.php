@@ -62,8 +62,8 @@ class GameModelTest extends TestCase
         // Testing API acts accordingly when receiving an specific gameId
         Game::find(1)->update(['startTime'=> Carbon::now()->addSeconds(120)]);
 
-        $response = $this->getJson('/api/game/secondsToGame?gameId=1');
-        $response->assertJsonFragment(['secondsToGame' => 120]);
+        $response = $this->getJson('/api/game/getSecondsToGame?gameId=1');
+        $response->assertJsonFragment(['getSecondsToGame' => 120]);
 
 
         // Testing Api knows how to fetch the latest created game if no gameId is provided
@@ -71,7 +71,7 @@ class GameModelTest extends TestCase
             'startTime' => Carbon::now()->addSeconds(52)
         ]);
 
-        $response = $this->getJson('/api/game/secondsToGame');
+        $response = $this->getJson('/api/game/getSecondsToGame');
         $response->assertJsonFragment(['secondsToGame' => 52]);
 
 
@@ -83,11 +83,22 @@ class GameModelTest extends TestCase
             'startTime' => Carbon::now()->addSeconds(78)
         ]);
 
-        $response = $this->getJson('/api/game/secondsToGame?gameId=');
+        $response = $this->getJson('/api/game/getSecondsToGame?gameId=');
         $response->assertJsonFragment(['secondsToGame' => 78]);
 
+    }
 
+    public function testItGetsTheCurrentQuestion()
+    {
+        //TODO: Make it dynamic
+        $user = User::find(6);
+        $this->actingAs($user);
 
+        $userSecret = "LNUvWV0oxQ2p66UGFTe9fp26HetWbvvOq9TciFWB";
+
+        $response = $this->getJson("/api/game/getCurrentQuestion?userSecretToken=$userSecret");
+
+        dd($response);
     }
 
 }

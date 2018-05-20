@@ -22,43 +22,6 @@ class GameController extends Controller
         ]);
     }
 
-    function getSecondsToGame(Request $request)
-    {
-        $gameId = $request->get('gameId');
-        if ($gameId === null) {
-            return response()->json([
-                'secondsToGame' => Game::currentGame()->secondsUntilStart
-            ], response::HTTP_OK);
-        }
-
-        return response()->json([
-            'secondsToGame' => Game::findOrFail($gameId)->secondsUntilStart
-        ], response::HTTP_OK);
-    }
-
-    function getCurrentQuestion()
-    {
-        $currentGame = Game::currentGame();
-
-        // Retrieve the models
-        if ($currentGame->isOver) {
-            return null;
-        }
-
-        $question = $currentGame->currentQuestion;
-
-        // Get only the necessary attributes
-        // Obs: questionNumber is the number of the question within the quiz
-        //      For example, Question 2 of 12
-        //                  (questionNumber == 2)
-        return response()->json([
-            'id' => $question->id,
-            'questionNumber' => $currentGame->currentQuestionNumber,
-            'statement' => $question->statement,
-            'choices' => $question->shuffledAnswers,
-        ], response::HTTP_OK);
-
-    }
 
     function askNextQuestion()
     {
@@ -88,43 +51,61 @@ class GameController extends Controller
     }
 
 
+    function getSecondsToGame(Request $request)
+    {
+        $userSecret = $request->input('userSecretToken');
+        $currentUser = User::findBySecretToken($userSecret);
+        $currentGame = Game::currentGame($currentUser->id);
+
+        return response()->json([
+            'secondsToGame' => $currentGame->secondsUntilStart
+        ], response::HTTP_OK);
+    }
+
+    function getCurrentQuestion(Request $request)
+    {
+        $userSecret = $request->input('userSecretToken');
+        $currentUser = User::findBySecretToken($userSecret);
+
+        $currentGame = Game::currentGame($currentUser->id);
+
+        $question = $currentGame->currentQuestion;
+
+        if(!$question)
+        {
+            return response()->json([], response::HTTP_OK);
+        }
+
+
+        // Get only the necessary attributes
+        // Obs: questionNumber is the number of the question within the quiz
+        //      For example, Question 2 of 12
+        //                  (questionNumber == 2)
+        return response()->json([
+            'id' => $question->id,
+            'questionNumber' => $currentGame->currentQuestionNumber,
+            'statement' => $question->statement,
+            'choices' => $question->shuffledAnswers,
+        ], response::HTTP_OK);
+
+    }
+
     function answerQuestion(Request $request)
     {
         // Fetch the data from the request
         $userSecret = $request->input('userSecretToken');
-        $answerGiven = $request->input('answerGiven');
-
-        // Collect the models
-        $currentGame = Game::currentGame();
         $currentUser = User::findBySecretToken($userSecret);
 
-        // Update the answers counters for the target question
-        $currentGame->currentQuestion->registerAnswer($answerGiven);
+        $answerGiven = $request->input('answerGiven');
 
-        // See if the answer was correct
-        if (!$currentGame->currentQuestion->isAnswerRight($answerGiven)) {
-
-            $currentUser->disqualify();
-
-            return response()->json([
-                'isAnswerRight' => false,
-                'currentScore' => $currentUser->score
-            ], Response::HTTP_OK);
-
-        }
+        $currentUser->answerQuestion($answerGiven);
 
 
-        $currentUser->incrementScore();
-
-
-        $currentGame->gotoNextQuestion();
-
+        // TODO: Remove this response
         return response()->json([
             'isAnswerRight' => true,
-            'currentScore' => $currentUser->score
+            'currentScore' => 0
         ], Response::HTTP_OK);
-
-
     }
 
 
