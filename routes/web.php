@@ -27,4 +27,4 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 
 
-Route::post('/game/answerQuestion', 'GameController@answerQuestion');
+//Route::post('/game/answerQuestion', 'GameController@answerQuestion');

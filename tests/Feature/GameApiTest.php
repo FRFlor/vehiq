@@ -17,4 +17,27 @@ class GameApiTest extends TestCase
     {
 
     }
+
+
+    public function testItGetsSecretProperly()
+    {
+        $this->actingAs(User::find(2));
+
+        $response = $this->getJson('/oauth/clients');
+        dd($response->dump());
+
+        $response = $this->postJson('/api/game/answerQuestion',[
+            'answerGiven' => $answerGiven
+        ]);
+
+        $response->assertJsonFragment(['isAnswerRight'=>false]);
+
+        $answerGiven =  $currentGame->currentQuestion->rightAnswer;
+
+        $response = $this->postJson('/api/game/answerQuestion',[
+            'answerGiven' => $answerGiven
+        ]);
+
+        $response->assertJsonFragment(['isAnswerRight'=>true]);
+    }
 }

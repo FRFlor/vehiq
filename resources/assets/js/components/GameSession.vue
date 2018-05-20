@@ -8,7 +8,7 @@
                   v-show="!disqualified"
                   @alternative-clicked="answerCurrentQuestion"></question>
 
-        <p  v-show="disqualified">Get out, loser!</p>
+        <p v-show="disqualified">Get out, loser!</p>
     </div>
 </template>
 
@@ -21,6 +21,7 @@
                 timerSeconds: 10,
                 disqualified: false,
                 showQuestion: true,
+                userSecret: '',
             }
         },
         watch: {
@@ -42,11 +43,6 @@
                 console.log(`Reaching for: ${this.url}/api/game/getCurrentQuestion`);
                 window.axios.get(`${this.url}/api/game/getCurrentQuestion`).then((response) => {
 
-                    if (response.status !== 200) {
-                        console.log("Retrieve-Question API failed to respond.");
-                        return false;
-                    }
-
                     if (response.data.questionData === null) {
                         console.log("No more questions available");
                         return false;
@@ -61,23 +57,50 @@
             },
             answerCurrentQuestion(answerStr) {
                 console.log(`Answering with ${answerStr}`);
-                window.axios.post(`${this.url}/game/answerQuestion`,
+
+                if (this.userSecret === '') {
+                    // If there's no user secret. Ignore the request.
+                    console.log('User Secret is required to communicate with the API, answer request cannot be sent');
+                    return false;
+                }
+
+                axios.post(`${this.url}/api/game/answerQuestion`,
                     {
+                        userSecretToken: this.userSecret,
                         answerGiven: answerStr
                     }).then((response) => {
-                    if (response.status !== 200) {
-                        console.log("Answer-Question API failed to respond.");
-                        return false;
-                    }
 
                     this.disqualified = !response.data.isAnswerRight;
                     console.log(`Answer-Question API replied with: ${response.data.isAnswerRight}`);
                     this.retrieveQuestion();
-                    return true;
                 });
+
+            },
+            getUserSecret() {
+                // Try to retrieve Secret Token for API Authentication
+                axios.get('/oauth/clients')
+                    .then(getAuthResponse => {
+                        console.log("data Length = " + getAuthResponse.data.length);
+
+                        // If no token is found in the database. Request creation of token
+                        if (getAuthResponse.data.length === 0) {
+                            axios.post('/oauth/clients', {
+                                name: this.userName + Date.now(),
+                                redirect: this.url,
+                            }).then(() => {
+                                // With token now created, re-attempt to retrieve said token
+                                this.getUserSecret();
+                            });
+                        }
+                        ;
+
+                        // Secret successfully received, save it!
+                        this.userSecret = getAuthResponse.data[0].secret;
+                    });
             },
         },
         mounted() {
+            this.getUserSecret();
             this.retrieveQuestion();
         }
     }

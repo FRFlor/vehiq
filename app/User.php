@@ -4,10 +4,12 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -38,6 +40,17 @@ class User extends Authenticatable
     {
         $this->isDisqualified = true;
         return $this->save();
+    }
+
+    static function findBySecretToken($secret)
+    {
+        $userId = DB::table('users')
+            ->join('oauth_clients','users.id','=','oauth_clients.user_id')
+            ->where('oauth_clients.secret','=',$secret)
+            ->pluck('users.id')
+            ->first();
+
+        return static::find($userId);
     }
 
     static function scopeQualified($query)
