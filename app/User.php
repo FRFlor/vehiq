@@ -86,11 +86,9 @@ class User extends Authenticatable
         $gameId = Game::currentGame($this->id)->id;
 
         $score = 0;
-        foreach($this->questions as $userResponse)
-        {
-            if($userResponse->game_Id == $gameId &&
-                trim($userResponse->rightAnswer) == trim($userResponse->pivot->answerGiven))
-            {
+        foreach ($this->questions as $userResponse) {
+            if ($userResponse->game_Id == $gameId &&
+                trim($userResponse->rightAnswer) == trim($userResponse->pivot->answerGiven)) {
                 $score++;
             }
         }
@@ -103,13 +101,12 @@ class User extends Authenticatable
     {
         $currentGame = Game::currentGame($this->id);
 
-        if ($currentGame->secondsUntilStart > 0)
-        {
+        if ($currentGame->secondsUntilStart > 0) {
             return false;
         }
 
         // Check if there is one question wrong
-        foreach($this->questions as $userResponse) {
+        foreach ($this->questions as $userResponse) {
             if ($userResponse->game_Id == $currentGame->id &&
                 trim($userResponse->rightAnswer) != trim($userResponse->pivot->answerGiven)) {
                 return true;
@@ -117,8 +114,7 @@ class User extends Authenticatable
         }
 
         // Check if the player missed one question
-        if($this->questions->count() < $currentGame->currentQuestionNumber - 1 && $currentGame->currentQuestionNumber != 0)
-        {
+        if ($this->questions->count() < $currentGame->currentQuestionNumber - 1 && $currentGame->currentQuestionNumber != 0) {
             return true;
         }
 
@@ -129,21 +125,19 @@ class User extends Authenticatable
     function answerQuestion($answerGiven)
     {
         // Someone that is disqualified cannot answer questions, only watch them
-        if($this->isDisqualified){
+        if ($this->isDisqualified) {
             return false;
         }
 
         return $this->questions()
             ->save(Game::currentGame($this->id)->currentQuestion,
-            ['answerGiven' => $answerGiven]);
+                ['answerGiven' => $answerGiven]);
     }
 
     function getIsCurrentlyInGameAttribute()
     {
-        foreach($this->games as $game)
-        {
-            if (!$game->isOver)
-            {
+        foreach ($this->games as $game) {
+            if (!$game->isOver) {
                 return true;
             }
         }
@@ -151,22 +145,20 @@ class User extends Authenticatable
         return false;
     }
 
-    function enrollIntoGame()
+    function joinGame()
     {
         // Is currently playing a game? Cannot enroll...
-        if ($this->isCurrentlyInGame)
-        {
+        if ($this->isCurrentlyInGame) {
             return false;
         }
 
         $game = Game::upcomingGame();
 
         // There are no new games available? Cannot enroll...
-        if (!$game)
-        {
+        if (!$game) {
             return false;
         }
 
-        return $this->games()->save($game)? true : false;
+        return $this->games()->save($game) ? true : false;
     }
 }

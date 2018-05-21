@@ -5,9 +5,6 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 
 
-
-
-
 /**
  * App\Question
  *
@@ -87,10 +84,8 @@ class Question extends Model
         $wrongAnswer1Count = 0;
         $wrongAnswer2Count = 0;
 
-        foreach($this->users as $userResponse)
-        {
-            switch(trim($userResponse->pivot->answerGiven))
-            {
+        foreach ($this->users as $userResponse) {
+            switch (trim($userResponse->pivot->answerGiven)) {
                 case trim($this->rightAnswer):
                     $rightAnswerCount++;
                     break;

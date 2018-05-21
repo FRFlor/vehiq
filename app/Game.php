@@ -47,7 +47,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Game extends Model
 {
-    protected $fillable = ['startTime','secondsPerQuestion','currentQuestionNumber'];
+    protected $fillable = ['startTime', 'secondsPerQuestion', 'currentQuestionNumber'];
     const NO_QUESTION_NUMBER = 0;
 
     function questions()
@@ -66,13 +66,12 @@ class Game extends Model
         $newGame = new Game;
         $newGame->startTime = Carbon::now()->addSeconds($secondsUntilStart);
         $newGame->secondsToAnswerQuestion = $secondsToAnswerQuestion;
-        $newGame->secondsToReadQuestionStats  = $secondsToReadQuestionStats;
+        $newGame->secondsToReadQuestionStats = $secondsToReadQuestionStats;
 
         $newGame->save();
 
         //TODO: Add questions to the game
-        for($i = 1; $i <= 12; $i++)
-        {
+        for ($i = 1; $i <= 12; $i++) {
             Question::addNewQuestionToGame(
                 $newGame->id,
                 "Is this a placeholder? $i",
@@ -87,25 +86,22 @@ class Game extends Model
     function getCurrentQuestionNumberAttribute()
     {
         // 1) Calculate how many seconds have passed
-        if($this->secondsSinceStarted < 0)
-        {   // Game hasn't started yet
+        if ($this->secondsSinceStarted < 0) {   // Game hasn't started yet
             return static::NO_QUESTION_NUMBER;
         }
 
-        if ($this->secondsSinceStarted > $this->totalSecondsPerQuestion * $this->questions->count())
-        {   // Game has ended already
+        if ($this->secondsSinceStarted > $this->totalSecondsPerQuestion * $this->questions->count()) {   // Game has ended already
             return static::NO_QUESTION_NUMBER;
         }
 
-        return floor($this->secondsSinceStarted / $this->totalSecondsPerQuestion)+1;
+        return floor($this->secondsSinceStarted / $this->totalSecondsPerQuestion) + 1;
     }
 
     static function upcomingGame()
     {
         $latestGame = static::currentGame();
 
-        if($latestGame->secondsUntilStart < 0)
-        {
+        if ($latestGame->secondsUntilStart < 0) {
             return null;
         }
 
@@ -114,12 +110,11 @@ class Game extends Model
 
     static function currentGame($userId = null)
     {
-        if ($userId == null)
-        {
-            return static::orderBy('id','DESC')->first();
+        if ($userId == null) {
+            return static::orderBy('id', 'DESC')->first();
         }
 
-        return User::find($userId)->games()->orderBy('id','DESC')->first();;
+        return User::find($userId)->games()->orderBy('id', 'DESC')->first();;
 
     }
 
@@ -130,30 +125,27 @@ class Game extends Model
 
     function getSecondsRemainingToAnswerQuestionAttribute()
     {
-        if($this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
-        {
+        if ($this->currentQuestionNumber === static::NO_QUESTION_NUMBER) {
             return 0;
         }
 
 
-        return $this->currentQuestionNumber* $this->totalSecondsPerQuestion
+        return $this->currentQuestionNumber * $this->totalSecondsPerQuestion
             - $this->secondsToReadQuestionStats - $this->secondsSinceStarted;
     }
 
     function getSecondsRemainingToReadQuestionStatsAttribute()
     {
-        if($this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
-        {
+        if ($this->currentQuestionNumber === static::NO_QUESTION_NUMBER) {
             return 0;
         }
 
-        if($this->secondsRemainingToAnswerQuestion > 0)
-        {
+        if ($this->secondsRemainingToAnswerQuestion > 0) {
             return 0;
         }
 
 
-        return $this->currentQuestionNumber*$this->totalSecondsPerQuestion - $this->secondsSinceStarted;
+        return $this->currentQuestionNumber * $this->totalSecondsPerQuestion - $this->secondsSinceStarted;
 
     }
 
@@ -171,30 +163,27 @@ class Game extends Model
 
     function getCurrentQuestionAttribute()
     {
-        if ($this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
-        {
+        if ($this->currentQuestionNumber === static::NO_QUESTION_NUMBER) {
             return null;
         }
 
         return $this->questions()
-            ->orderBy('id','ASC')
-            ->skip($this->currentQuestionNumber-1)
+            ->orderBy('id', 'ASC')
+            ->skip($this->currentQuestionNumber - 1)
             ->first();
     }
 
     function getIsOverAttribute()
     {
         // There has been enough time to show all questions... end the game
-        if($this->secondsSinceStarted > 0 && $this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
-        {
+        if ($this->secondsSinceStarted > 0 && $this->currentQuestionNumber === static::NO_QUESTION_NUMBER) {
             return true;
         }
 
         // If all players are disqualified and there has been enough time to show the statistics of the
         // question that disqualified the very last player... end the game
         if ($this->areAllPlayersDisqualified &&
-            $this->secondsSinceStarted >= $this->minimumSecondsToShowStatsOfAllAnswers)
-        {
+            $this->secondsSinceStarted >= $this->minimumSecondsToShowStatsOfAllAnswers) {
             return true;
         }
 
@@ -203,10 +192,8 @@ class Game extends Model
 
     function getAreAllPlayersDisqualifiedAttribute()
     {
-        foreach($this->users as $player)
-        {
-            if (!$player->isDisqualified)
-            {   // At least one player is still playing
+        foreach ($this->users as $player) {
+            if (!$player->isDisqualified) {   // At least one player is still playing
                 return false;
             }
         }
@@ -220,32 +207,33 @@ class Game extends Model
     }
 
 
-    public function getSecondsUntilStartAttribute(){
+    public function getSecondsUntilStartAttribute()
+    {
 
-        return Carbon::now()->diffInSeconds($this->startTime,false);
+        return Carbon::now()->diffInSeconds($this->startTime, false);
     }
 
-    public function getSecondsSinceStartedAttribute(){
-        return (-1)*$this->secondsUntilStart;
+    public function getSecondsSinceStartedAttribute()
+    {
+        return (-1) * $this->secondsUntilStart;
     }
 
 
-    public function getMinimumSecondsToShowStatsOfAllAnswersAttribute(){
+    public function getMinimumSecondsToShowStatsOfAllAnswersAttribute()
+    {
         $lastQuestionNumber = 0;
-        foreach($this->questions()->orderBy('id','ASC')->get() as $question)
-        {
-            if ($question->users()->count() == 0){
+        foreach ($this->questions()->orderBy('id', 'ASC')->get() as $question) {
+            if ($question->users()->count() == 0) {
                 break;
             }
             $lastQuestionNumber++;
         }
 
-        if ($lastQuestionNumber === 0)
-        {
+        if ($lastQuestionNumber === 0) {
             return 0;
         }
 
-        return $this->totalSecondsPerQuestion*$lastQuestionNumber;
+        return $this->totalSecondsPerQuestion * $lastQuestionNumber;
     }
 
 

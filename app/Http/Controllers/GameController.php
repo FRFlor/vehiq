@@ -22,7 +22,7 @@ class GameController extends Controller
         $userSecret = $request->input('userSecretToken');
         $currentUser = User::findBySecretToken($userSecret);
 
-        return response()->json(['hasJoinedGame' => $currentUser->enrollIntoGame()], Response::HTTP_OK);
+        return response()->json(['hasJoinedGame' => $currentUser->joinGame()], Response::HTTP_OK);
     }
 
     function answerQuestion(Request $request)
