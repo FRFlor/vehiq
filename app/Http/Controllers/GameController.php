@@ -13,81 +13,16 @@ class GameController extends Controller
 {
     function playGame()
     {
-        if (Auth::user() === null) {
-            return view('welcome');
-        }
-
-        return view('game.play', [
-            'secondsToGame' => Game::currentGame()->secondsUntilStart
-        ]);
+        return view('game.play');
     }
 
-
-    function askNextQuestion()
+    function joinGame(Request $request)
     {
-        // Retrieve the models
-        $currentGame = Game::currentGame();
-        $isThereAnotherQuestion = $currentGame->gotoNextQuestion();
-
-
-        if ($isThereAnotherQuestion) {
-            $question = $currentGame->currentQuestion;
-
-            // Get only the necessary attributes
-            // Obs: questionNumber is the number of the question within the quiz
-            //      For example, Question 2 of 12
-            //                  (questionNumber == 2)
-            return view('game.askQuestion', ['questionData' => [
-                'id' => $question->id,
-                'questionNumber' => $currentGame->currentQuestionNumber,
-                'statement' => $question->statement,
-                'choices' => $question->shuffledAnswers,
-            ]]);
-        }
-
-
-        return view('game.notPlaying');
-
-    }
-
-
-    function getSecondsToGame(Request $request)
-    {
-        $userSecret = $request->input('userSecretToken');
-        $currentUser = User::findBySecretToken($userSecret);
-        $currentGame = Game::currentGame($currentUser->id);
-
-        return response()->json([
-            'secondsToGame' => $currentGame->secondsUntilStart
-        ], response::HTTP_OK);
-    }
-
-    function getCurrentQuestion(Request $request)
-    {
+        // Fetch the data from the request
         $userSecret = $request->input('userSecretToken');
         $currentUser = User::findBySecretToken($userSecret);
 
-        $currentGame = Game::currentGame($currentUser->id);
-
-        $question = $currentGame->currentQuestion;
-
-        if(!$question)
-        {
-            return response()->json([], response::HTTP_OK);
-        }
-
-
-        // Get only the necessary attributes
-        // Obs: questionNumber is the number of the question within the quiz
-        //      For example, Question 2 of 12
-        //                  (questionNumber == 2)
-        return response()->json([
-            'id' => $question->id,
-            'questionNumber' => $currentGame->currentQuestionNumber,
-            'statement' => $question->statement,
-            'choices' => $question->shuffledAnswers,
-        ], response::HTTP_OK);
-
+        return response()->json(['hasJoinedGame' => $currentUser->enrollIntoGame()], Response::HTTP_OK);
     }
 
     function answerQuestion(Request $request)
@@ -97,22 +32,72 @@ class GameController extends Controller
         $currentUser = User::findBySecretToken($userSecret);
 
         $answerGiven = $request->input('answerGiven');
-
         $currentUser->answerQuestion($answerGiven);
 
-
-        // TODO: Remove this response
-        return response()->json([
-            'isAnswerRight' => true,
-            'currentScore' => 0
-        ], Response::HTTP_OK);
+        return response()->json(['answerStored' => true], Response::HTTP_OK);
     }
 
 
-    function notifyTimeOut()
+    function getStatus(Request $request)
     {
-        $currentGame = Game::currentGame();
+        // Fetch the data from the request
+        $userSecret = $request->input('userSecretToken');
+        $currentUser = User::findBySecretToken($userSecret);
 
+        // Case 1: User is not in a game at all
+        if(!$currentUser->isCurrentlyInGame){
+            // Is there an upcoming game?
+            $secondsForNextGame = Game::upcomingGame()? Game::upcomingGame()->secondsUntilStart : 0;
+
+            return response()->json([
+                'status' => 'Not in Game',
+                'secondsRemaining' => $secondsForNextGame], Response::HTTP_OK);
+        }
+
+        $currentGame = Game::currentGame($currentUser->id);
+
+        // Case 2: User is in a game, but it hasn't started yet
+        if($currentGame->secondsUntilStart > 0){
+            return response()->json([
+                'status' => 'Waiting for Game',
+                'secondsRemaining' => $currentGame->secondsUntilStart], Response::HTTP_OK);
+        }
+
+        $currentQuestion = $currentGame->currentQuestion;
+
+        // Case 3: The user is in a game and is in the process of answering a question
+        if ($currentGame->isCurrentQuestionBeingAsked)
+        {
+            return response()->json([
+                'status' => 'Asking Question',
+                'secondsRemaining' => $currentGame->secondsRemainingToAnswerQuestion,
+                'player' => [
+                    'isDisqualified' =>   $currentUser->isDisqualified,
+                    'score' => $currentUser->score,
+                ],
+                'currentQuestion' => [
+                    'questionNumber' => $currentGame->currentQuestionNumber,
+                    'statement' => $currentQuestion->statement,
+                    'choices' => $currentQuestion->shuffledAnswers,
+                ],
+            ]);
+        }
+
+        // Case 4: The user is seeing question statistics
+        return response()->json([
+            'status' => 'Viewing Answer Poll',
+            'secondsRemaining' => $currentGame->secondsToReadQuestionStats,
+            'player' => [
+                'isDisqualified' =>   $currentUser->isDisqualified,
+                'score' => $currentUser->score,
+            ],
+            'currentQuestion' => [
+                'questionNumber' => $currentGame->currentQuestionNumber,
+                'statistics' => $currentQuestion->answerSelectionCount,
+            ],
+        ]);
     }
+
+
 
 }

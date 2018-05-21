@@ -1,18 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-    @if(Auth::user() !== null && !Auth::user()->isDisqualified)
-        <p>{{Auth::user()->name}}: {{Auth::user()->score}}</p>
-        <game-session
-                user-name="{{Auth::user()->name}}"
-                user-score="{{Auth::user()->score}}"
-                url="{{url('')}}"
-                :time-per-question="10"
-        ></game-session>
+    @guest
+        You must login to watch or play the game...
     @else
-        You shouldn't be here anymore
+        <game-session player-name="{{Auth::user()->name}}" url="{{url('')}}"></game-session>
     @endif
-
-
-
 @endsection

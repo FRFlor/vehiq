@@ -16,7 +16,8 @@ class CreateGamesTable extends Migration
         Schema::create('games', function (Blueprint $table) {
             $table->increments('id');
             $table->datetime('startTime');
-            $table->integer('secondsPerQuestion')->default(10);
+            $table->integer('secondsToAnswerQuestion')->default(10);
+            $table->integer('secondsToReadQuestionStats')->default(4);
             $table->timestamps();
         });
     }

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 // Student note::
 // To allow the quick creation of this property header I used:
 // https://github.com/barryvdh/laravel-ide-helper
-// Instructions: php artisan ide-helper:models Post --dir="App"
+// Instructions: php artisan ide-helper:models -R
 
 
 /**
@@ -18,21 +18,29 @@ use Illuminate\Support\Facades\DB;
  *
  * @property int $id
  * @property string $startTime
- * @property int $secondsPerQuestion
+ * @property int $secondsToAnswerQuestion
+ * @property int $secondsToReadQuestionStats
  * @property \Carbon\Carbon|null $createdAt
  * @property \Carbon\Carbon|null $updatedAt
  * @property-read mixed $areAllPlayersDisqualified
  * @property-read mixed $currentQuestion
  * @property-read mixed $currentQuestionNumber
+ * @property-read mixed $isCurrentQuestionBeingAsked
+ * @property-read mixed $isCurrentQuestionDisplayingStats
  * @property-read mixed $isOver
+ * @property-read mixed $minimumSecondsToShowStatsOfAllAnswers
  * @property-read mixed $numberOfQuestions
+ * @property-read mixed $secondsRemainingToAnswerQuestion
+ * @property-read mixed $secondsRemainingToReadQuestionStats
  * @property-read mixed $secondsSinceStarted
  * @property-read mixed $secondsUntilStart
+ * @property-read mixed $totalSecondsPerQuestion
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Question[] $questions
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\User[] $users
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereSecondsPerQuestion($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereSecondsToAnswerQuestion($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereSecondsToReadQuestionStats($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereStartTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereUpdatedAt($value)
  * @mixin \Eloquent
@@ -52,11 +60,13 @@ class Game extends Model
         return $this->belongsToMany(User::class);
     }
 
-    static function createNewGame($secondsUntilStart = 120, $secondsPerQuestion = 10)
+    static function createNewGame($secondsUntilStart = 120,
+                                  $secondsToAnswerQuestion = 10, $secondsToReadQuestionStats = 10)
     {
         $newGame = new Game;
         $newGame->startTime = Carbon::now()->addSeconds($secondsUntilStart);
-        $newGame->secondsPerQuestion = $secondsPerQuestion;
+        $newGame->secondsToAnswerQuestion = $secondsToAnswerQuestion;
+        $newGame->secondsToReadQuestionStats  = $secondsToReadQuestionStats;
 
         $newGame->save();
 
@@ -82,12 +92,12 @@ class Game extends Model
             return static::NO_QUESTION_NUMBER;
         }
 
-        if ($this->secondsSinceStarted > $this->secondsPerQuestion * $this->questions->count())
+        if ($this->secondsSinceStarted > $this->totalSecondsPerQuestion * $this->questions->count())
         {   // Game has ended already
             return static::NO_QUESTION_NUMBER;
         }
 
-        return floor($this->secondsSinceStarted / $this->secondsPerQuestion)+1;
+        return floor($this->secondsSinceStarted / $this->totalSecondsPerQuestion)+1;
     }
 
     static function upcomingGame()
@@ -109,16 +119,54 @@ class Game extends Model
             return static::orderBy('id','DESC')->first();
         }
 
+        return User::find($userId)->games()->orderBy('id','DESC')->first();;
 
-        $gameId = DB::table('games')
-            ->join('game_user', 'games.id', '=', 'game_user.game_id')
-            ->where('game_user.user_id', '=', $userId)
-            ->orderBy('games.id','DESC')
-            ->pluck('games.id')
-            ->first();
+    }
 
-        return static::find($gameId);
+    function getTotalSecondsPerQuestionAttribute()
+    {
+        return $this->secondsToAnswerQuestion + $this->secondsToReadQuestionStats;
+    }
 
+    function getSecondsRemainingToAnswerQuestionAttribute()
+    {
+        if($this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
+        {
+            return 0;
+        }
+
+
+        return $this->currentQuestionNumber* $this->totalSecondsPerQuestion
+            - $this->secondsToReadQuestionStats - $this->secondsSinceStarted;
+    }
+
+    function getSecondsRemainingToReadQuestionStatsAttribute()
+    {
+        if($this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
+        {
+            return 0;
+        }
+
+        if($this->secondsRemainingToAnswerQuestion > 0)
+        {
+            return 0;
+        }
+
+
+        return $this->currentQuestionNumber*$this->totalSecondsPerQuestion - $this->secondsSinceStarted;
+
+    }
+
+
+    // A question is either being asked or displaying answers stats
+    function getIsCurrentQuestionBeingAskedAttribute()
+    {
+        return ($this->secondsRemainingToAnswerQuestion > 0);
+    }
+
+    function getIsCurrentQuestionDisplayingStatsAttribute()
+    {
+        return ($this->secondsToReadQuestionStats > 0);
     }
 
     function getCurrentQuestionAttribute()
@@ -136,9 +184,16 @@ class Game extends Model
 
     function getIsOverAttribute()
     {
-        // The time for all the questions has finished or all players already lost the game
-        if(($this->secondsSinceStarted > 0 && $this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
-            || $this->areAllPlayersDisqualified)
+        // There has been enough time to show all questions... end the game
+        if($this->secondsSinceStarted > 0 && $this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
+        {
+            return true;
+        }
+
+        // If all players are disqualified and there has been enough time to show the statistics of the
+        // question that disqualified the very last player... end the game
+        if ($this->areAllPlayersDisqualified &&
+            $this->secondsSinceStarted >= $this->minimumSecondsToShowStatsOfAllAnswers)
         {
             return true;
         }
@@ -173,5 +228,25 @@ class Game extends Model
     public function getSecondsSinceStartedAttribute(){
         return (-1)*$this->secondsUntilStart;
     }
+
+
+    public function getMinimumSecondsToShowStatsOfAllAnswersAttribute(){
+        $lastQuestionNumber = 0;
+        foreach($this->questions()->orderBy('id','ASC')->get() as $question)
+        {
+            if ($question->users()->count() == 0){
+                break;
+            }
+            $lastQuestionNumber++;
+        }
+
+        if ($lastQuestionNumber === 0)
+        {
+            return 0;
+        }
+
+        return $this->totalSecondsPerQuestion*$lastQuestionNumber;
+    }
+
 
 }

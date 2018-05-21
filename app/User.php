@@ -20,7 +20,7 @@ use Laravel\Passport\HasApiTokens;
  * @property \Carbon\Carbon|null $updatedAt
  * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[] $clients
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Game[] $games
- * @property-read mixed $isCurrentInGame
+ * @property-read mixed $isCurrentlyInGame
  * @property-read mixed $isDisqualified
  * @property-read mixed $score
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
@@ -138,7 +138,7 @@ class User extends Authenticatable
             ['answerGiven' => $answerGiven]);
     }
 
-    function getIsCurrentInGameAttribute()
+    function getIsCurrentlyInGameAttribute()
     {
         foreach($this->games as $game)
         {
@@ -154,7 +154,7 @@ class User extends Authenticatable
     function enrollIntoGame()
     {
         // Is currently playing a game? Cannot enroll...
-        if ($this->isCurrentInGame)
+        if ($this->isCurrentlyInGame)
         {
             return false;
         }
@@ -167,6 +167,6 @@ class User extends Authenticatable
             return false;
         }
 
-        return $this->games()->save($game);
+        return $this->games()->save($game)? true : false;
     }
 }
