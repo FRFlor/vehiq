@@ -44,12 +44,11 @@ class GameController extends Controller
         $userSecret = $request->input('userSecretToken');
         $currentUser = User::findBySecretToken($userSecret);
 
-        if(!$currentUser->isCurrentInGame){
-            $secondsForNextGame = 0;
-            if (Game::upcomingGame())
-            {
-                $secondsForNextGame = Game::upcomingGame()->secondsUntilStart;
-            }
+        // Case 1: User is not in a game at all
+        if(!$currentUser->isCurrentlyInGame){
+            // Is there an upcoming game?
+            $secondsForNextGame = Game::upcomingGame()? Game::upcomingGame()->secondsUntilStart : 0;
+
             return response()->json([
                 'status' => 'Not in Game',
                 'secondsRemaining' => $secondsForNextGame], Response::HTTP_OK);
@@ -57,6 +56,7 @@ class GameController extends Controller
 
         $currentGame = Game::currentGame($currentUser->id);
 
+        // Case 2: User is in a game, but it hasn't started yet
         if($currentGame->secondsUntilStart > 0){
             return response()->json([
                 'status' => 'Waiting for Game',
@@ -65,19 +65,36 @@ class GameController extends Controller
 
         $currentQuestion = $currentGame->currentQuestion;
 
-        // At this point it is known that the game has already started
+        // Case 3: The user is in a game and is in the process of answering a question
+        if ($currentGame->isCurrentQuestionBeingAsked)
+        {
+            return response()->json([
+                'status' => 'Asking Question',
+                'secondsRemaining' => $currentGame->secondsRemainingToAnswerQuestion,
+                'player' => [
+                    'isDisqualified' =>   $currentUser->isDisqualified,
+                    'score' => $currentUser->score,
+                ],
+                'currentQuestion' => [
+                    'questionNumber' => $currentGame->currentQuestionNumber,
+                    'statement' => $currentQuestion->statement,
+                    'choices' => $currentQuestion->shuffledAnswers,
+                ],
+            ]);
+        }
+
+        // Case 4: The user is seeing question statistics
         return response()->json([
-            'status' => 'Asking Question',
-            'secondsRemaining' => $currentGame->secondsRemainingInQuestion,
+            'status' => 'Viewing Answer Poll',
+            'secondsRemaining' => $currentGame->secondsToReadQuestionStats,
             'player' => [
-              'isDisqualified' =>   $currentUser->isDisqualified,
+                'isDisqualified' =>   $currentUser->isDisqualified,
                 'score' => $currentUser->score,
             ],
             'currentQuestion' => [
                 'questionNumber' => $currentGame->currentQuestionNumber,
-                'statement' => $currentQuestion->statement,
-                'choices' => $currentQuestion->shuffledAnswers,
-                ],
+                'statistics' => $currentQuestion->answerSelectionCount,
+            ],
         ]);
     }
 

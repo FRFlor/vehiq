@@ -14,7 +14,7 @@
                 But hey! There's a game coming soon!
                 <game-timer :start-seconds="secondsRemaining"></game-timer>
 
-                <button @click="onJoinGameButtonClicked">Let me join it!</button>
+                <button @click="requestToJoinGame">Let me join it!</button>
             </div>
         </div>
 
@@ -24,26 +24,31 @@
             Waiting for game!
 
             <game-timer :start-seconds="secondsRemaining"
-                        @time-expired="onGameStarting"></game-timer>
+                        @time-expired="getGameStatus"></game-timer>
         </div>
 
 
         <!--The server informed the user is currently in the process of answering a question-->
         <div v-if="gameStatus === 'Asking Question'">
             <game-timer :start-seconds="secondsRemaining"
-                        @time-expired="onQuestionTimeEnd"></game-timer>
+                        @time-expired="getGameStatus"></game-timer>
 
             <question :question-data="questionData"
                       :read-only="isQuestionReadOnly"
-                      @alternative-clicked="onAlternativeClickedOnQuestion"></question>
+                      @alternative-clicked="answerCurrentQuestion"></question>
         </div>
 
 
-        <!--TODO: Implement viewing answer poll-->
         <!--The server informed the user is currently in the process of viewing answer poll-->
         <div v-if="gameStatus === 'Viewing Answer Poll'">
-            Viewing answer poll
+            <game-timer :start-seconds="secondsRemaining"
+                        @time-expired="getGameStatus"></game-timer>
+
+            <question :question-data="questionData"
+                      :question-statistics="questionStatistics"
+            ></question>
         </div>
+
 
     </div>
 </template>
@@ -60,6 +65,7 @@
 
                 // Question related data
                 questionData: null,
+                questionStatistics: null,
                 isQuestionReadOnly: false,
 
 
@@ -74,32 +80,36 @@
 
                 this.isQuestionReadOnly =
                     (this.isPlayerDisqualified || this.gameStatus === 'Viewing Answer Poll');
-
             }
         },
         methods: {
-
             //
-            // Event Handlers
+            // Support Methods
             //
-            onGameStarting(){
-                // The user was previously waiting for the game to start,
-                // and now the game will finally begin!
-                this.getGameStatus();
-            },
-            onQuestionTimeEnd(){
-                // The timer for the current question has expired!
-                this.getGameStatus();
-            },
-            onAlternativeClickedOnQuestion(answerStr){
-                //The user is answering a question
-              this.answerCurrentQuestion(answerStr);
-            },
-            onJoinGameButtonClicked(){
-                // The user is not in a game yet, and is trying to join one!
-                this.requestToJoinGame();
-            },
+            parseQuestionStatistics(choicesStats){
 
+                let processedStatistics = [];
+
+                // The answers in the backend are in order (right, wrong1, wrong2)
+                // The answers shown to the user are in randomized order
+                // The following loop applies the statistic data to the corresponding answer
+                for (let i = 0; i < this.questionData['choices'].length; i++)
+                {
+                    let answerText = this.questionData['choices'][i];
+                    for (let j=0; j < choicesStats.length; j++){
+                        if (choicesStats[j] === answerText){
+                            processedStatistics.push({
+                                'text': answerText,
+                                'count':choicesStats[j]['count']
+                            });
+                        }
+                        break;
+                    }
+                    break;
+                }
+
+                return processedStatistics;
+            },
 
             //
             // API calls
@@ -125,6 +135,8 @@
                         this.userSecret = getAuthResponse.data[0].secret;
                     });
             },
+
+
             getGameStatus(){
                 if (this.userSecret === '') {
                     // If there's no user secret. Ignore the request.
@@ -137,9 +149,8 @@
                     this.gameStatus = response.data.status;
 
                     switch(this.gameStatus){
-                        case 'Not in Game':
+                        case 'Not in Game': // If there's a upcoming game, tell player when it's coming
                             this.secondsRemaining = response.data.secondsRemaining;
-                            // 'Not in game' has no further data
                             break;
                         case 'Waiting for Game': // Inform the user how long they have to wait
                             this.secondsRemaining = response.data.secondsRemaining;
@@ -147,13 +158,17 @@
                         case 'Asking Question':
                             this.secondsRemaining = response.data.secondsRemaining; // How long they have to answer
                             this.questionData = response.data.currentQuestion;
-                            this.isPlayerDisqualified = response.data.isDisqualified;
+                            this.questionStatistics = null;
+                            this.isPlayerDisqualified = response.data.player.isDisqualified;
+                            this.playerScore = response.data.player.score;
+                            this.$children[0].setTimerTo(this.secondsRemaining);
                             break;
                         case 'Viewing Answer Poll':
-                            // Show answers in read only mode
-                            break;
-                        case 'Viewing Leaderboard':
-                            // Show top 3 players
+                            this.secondsRemaining = response.data.secondsRemaining;
+                            this.isPlayerDisqualified = response.data.player.isDisqualified;
+                            this.playerScore = response.data.player.score;
+                            this.questionStatistics = response.data.currentQuestion.statistics;
+                            this.$children[0].setTimerTo(this.secondsRemaining);
                             break;
                         default:
                             Console.log(`Unhandled gameStatue = ${response.data.status}`);
@@ -164,6 +179,8 @@
                 });
 
             },
+
+
             answerCurrentQuestion(answerStr) {
                 console.log(`Answering with ${answerStr}`);
 
@@ -181,6 +198,8 @@
                 });
 
             },
+
+
             requestToJoinGame() {
                 if (this.userSecret === '') {
                     // If there's no user secret. Ignore the request.

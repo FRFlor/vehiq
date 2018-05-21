@@ -47632,9 +47632,20 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['questionData', 'isReadOnly'],
+    props: ['questionData', 'questionStatistics', 'isReadOnly'],
     data: function data() {
         return {};
     },
@@ -47666,26 +47677,44 @@ var render = function() {
         _vm._v(" "),
         _c("br"),
         _vm._v(" "),
-        _c(
-          "ul",
-          { staticClass: "list-group" },
-          _vm._l(_vm.questionData["choices"], function(alternative) {
-            return _c("li", { staticClass: "list-unstyled" }, [
+        !_vm.questionStatistics
+          ? _c("div", [
               _c(
-                "button",
-                {
-                  staticClass: "btn-sm btn-block m-1",
-                  on: {
-                    click: function($event) {
-                      _vm.onAlternativeClicked(alternative)
-                    }
-                  }
-                },
-                [_vm._v(_vm._s(alternative))]
+                "ul",
+                { staticClass: "list-group" },
+                _vm._l(_vm.questionData["choices"], function(alternative) {
+                  return _c("li", { staticClass: "list-unstyled" }, [
+                    _c(
+                      "button",
+                      {
+                        staticClass: "btn-sm btn-block m-1",
+                        on: {
+                          click: function($event) {
+                            _vm.onAlternativeClicked(alternative)
+                          }
+                        }
+                      },
+                      [_vm._v(_vm._s(alternative))]
+                    )
+                  ])
+                })
               )
             ])
-          })
-        )
+          : _c("div", [
+              _c(
+                "ul",
+                { staticClass: "list-group" },
+                _vm._l(_vm.questionStatistics, function(answer) {
+                  return _c("li", { staticClass: "list-unstyled" }, [
+                    _c("button", { staticClass: "btn-sm btn-block m-1" }, [
+                      _vm._v(
+                        _vm._s(answer.answerText) + " " + _vm._s(answer.count)
+                      )
+                    ])
+                  ])
+                })
+              )
+            ])
       ])
     : _vm._e()
 }
@@ -47785,7 +47814,7 @@ exports = module.exports = __webpack_require__(52)(false);
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
 
 // exports
 
@@ -48189,6 +48218,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: ['playerName', 'url'],
@@ -48201,6 +48235,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
             // Question related data
             questionData: null,
+            questionStatistics: null,
             isQuestionReadOnly: false,
 
             // Player related data
@@ -48217,26 +48252,31 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         }
     },
     methods: {
+        //
+        // Support Methods
+        //
+        parseQuestionStatistics: function parseQuestionStatistics(choicesStats) {
 
-        //
-        // Event Handlers
-        //
-        onGameStarting: function onGameStarting() {
-            // The user was previously waiting for the game to start,
-            // and now the game will finally begin!
-            this.getGameStatus();
-        },
-        onQuestionTimeEnd: function onQuestionTimeEnd() {
-            // The timer for the current question has expired!
-            this.getGameStatus();
-        },
-        onAlternativeClickedOnQuestion: function onAlternativeClickedOnQuestion(answerStr) {
-            //The user is answering a question
-            this.answerCurrentQuestion(answerStr);
-        },
-        onJoinGameButtonClicked: function onJoinGameButtonClicked() {
-            // The user is not in a game yet, and is trying to join one!
-            this.requestToJoinGame();
+            var processedStatistics = [];
+
+            // The answers in the backend are in order (right, wrong1, wrong2)
+            // The answers shown to the user are in randomized order
+            // The following loop applies the statistic data to the corresponding answer
+            for (var i = 0; i < this.questionData['choices'].length; i++) {
+                var answerText = this.questionData['choices'][i];
+                for (var j = 0; j < choicesStats.length; j++) {
+                    if (choicesStats[j] === answerText) {
+                        processedStatistics.push({
+                            'text': answerText,
+                            'count': choicesStats[j]['count']
+                        });
+                    }
+                    break;
+                }
+                break;
+            }
+
+            return processedStatistics;
         },
 
 
@@ -48280,8 +48320,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
                 switch (_this2.gameStatus) {
                     case 'Not in Game':
+                        // If there's a upcoming game, tell player when it's coming
                         _this2.secondsRemaining = response.data.secondsRemaining;
-                        // 'Not in game' has no further data
                         break;
                     case 'Waiting for Game':
                         // Inform the user how long they have to wait
@@ -48290,13 +48330,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     case 'Asking Question':
                         _this2.secondsRemaining = response.data.secondsRemaining; // How long they have to answer
                         _this2.questionData = response.data.currentQuestion;
-                        _this2.isPlayerDisqualified = response.data.isDisqualified;
+                        _this2.questionStatistics = null;
+                        _this2.isPlayerDisqualified = response.data.player.isDisqualified;
+                        _this2.playerScore = response.data.player.score;
+                        _this2.$children[0].setTimerTo(_this2.secondsRemaining);
                         break;
                     case 'Viewing Answer Poll':
-                        // Show answers in read only mode
-                        break;
-                    case 'Viewing Leaderboard':
-                        // Show top 3 players
+                        _this2.secondsRemaining = response.data.secondsRemaining;
+                        _this2.isPlayerDisqualified = response.data.player.isDisqualified;
+                        _this2.playerScore = response.data.player.score;
+                        _this2.questionStatistics = response.data.currentQuestion.statistics;
+                        _this2.$children[0].setTimerTo(_this2.secondsRemaining);
                         break;
                     default:
                         Console.log('Unhandled gameStatue = ' + response.data.status);
@@ -48373,7 +48417,7 @@ var render = function() {
                     attrs: { "start-seconds": _vm.secondsRemaining }
                   }),
                   _vm._v(" "),
-                  _c("button", { on: { click: _vm.onJoinGameButtonClicked } }, [
+                  _c("button", { on: { click: _vm.requestToJoinGame } }, [
                     _vm._v("Let me join it!")
                   ])
                 ],
@@ -48390,7 +48434,7 @@ var render = function() {
             _vm._v("\n        Waiting for game!\n\n        "),
             _c("game-timer", {
               attrs: { "start-seconds": _vm.secondsRemaining },
-              on: { "time-expired": _vm.onGameStarting }
+              on: { "time-expired": _vm.getGameStatus }
             })
           ],
           1
@@ -48403,7 +48447,7 @@ var render = function() {
           [
             _c("game-timer", {
               attrs: { "start-seconds": _vm.secondsRemaining },
-              on: { "time-expired": _vm.onQuestionTimeEnd }
+              on: { "time-expired": _vm.getGameStatus }
             }),
             _vm._v(" "),
             _c("question", {
@@ -48411,7 +48455,7 @@ var render = function() {
                 "question-data": _vm.questionData,
                 "read-only": _vm.isQuestionReadOnly
               },
-              on: { "alternative-clicked": _vm.onAlternativeClickedOnQuestion }
+              on: { "alternative-clicked": _vm.answerCurrentQuestion }
             })
           ],
           1
@@ -48419,7 +48463,23 @@ var render = function() {
       : _vm._e(),
     _vm._v(" "),
     _vm.gameStatus === "Viewing Answer Poll"
-      ? _c("div", [_vm._v("\n        Viewing answer poll\n    ")])
+      ? _c(
+          "div",
+          [
+            _c("game-timer", {
+              attrs: { "start-seconds": _vm.secondsRemaining },
+              on: { "time-expired": _vm.getGameStatus }
+            }),
+            _vm._v(" "),
+            _c("question", {
+              attrs: {
+                "question-data": _vm.questionData,
+                "question-statistics": _vm.questionStatistics
+              }
+            })
+          ],
+          1
+        )
       : _vm._e()
   ])
 }
