@@ -34,7 +34,7 @@
                         @time-expired="getGameStatus"></game-timer>
 
             <question :question-data="questionData"
-                      :read-only="isQuestionReadOnly"
+                      :is-read-only="isQuestionReadOnly"
                       @alternative-clicked="answerCurrentQuestion"></question>
         </div>
 
@@ -55,7 +55,7 @@
 
 <script>
     export default {
-        props: ['playerName','url'],
+        props: ['playerName', 'url'],
         data() {
             return {
                 userSecret: '',
@@ -86,29 +86,31 @@
             //
             // Support Methods
             //
-            parseQuestionStatistics(choicesStats){
-
-                let processedStatistics = [];
-
-                // The answers in the backend are in order (right, wrong1, wrong2)
-                // The answers shown to the user are in randomized order
-                // The following loop applies the statistic data to the corresponding answer
-                for (let i = 0; i < this.questionData['choices'].length; i++)
-                {
-                    let answerText = this.questionData['choices'][i];
-                    for (let j=0; j < choicesStats.length; j++){
-                        if (choicesStats[j] === answerText){
-                            processedStatistics.push({
-                                'text': answerText,
-                                'count':choicesStats[j]['count']
-                            });
-                        }
-                        break;
+            getChoiceCountForAnswer(answerText, choicesStats) {
+                for(let i = 0; i < choicesStats.length; i++){
+                    if(answerText === choicesStats[i].answerText){
+                        return choicesStats[i].count;
                     }
-                    break;
                 }
 
-                return processedStatistics;
+                return 0;
+            },
+            parseQuestionStatistics(choicesStats) {
+
+                return {
+                    choiceA: {
+                        answerText: this.questionData.choices.choiceA,
+                        count: this.getChoiceCountForAnswer(this.questionData.choices.choiceA,choicesStats)
+                    },
+                    choiceB: {
+                        answerText: this.questionData.choices.choiceB,
+                        count: this.getChoiceCountForAnswer(this.questionData.choices.choiceB,choicesStats)
+                    },
+                    choiceC: {
+                        answerText: this.questionData.choices.choiceC,
+                        count: this.getChoiceCountForAnswer(this.questionData.choices.choiceC,choicesStats)
+                    },
+                };
             },
 
             //
@@ -129,7 +131,8 @@
                                 this.getUserSecret(); //TODO: Ask Dan if Recursion is frowned upon
                             });
                             return false;
-                        };
+                        }
+                        ;
 
                         // Secret successfully received, save it!
                         this.userSecret = getAuthResponse.data[0].secret;
@@ -137,7 +140,7 @@
             },
 
 
-            getGameStatus(){
+            getGameStatus() {
                 if (this.userSecret === '') {
                     // If there's no user secret. Ignore the request.
                     console.log('User Secret is required to communicate with the API, request for status cannot be sent');
@@ -148,26 +151,22 @@
                 window.axios.get(`${this.url}/api/game/getStatus?userSecretToken=${this.userSecret}`).then((response) => {
                     this.gameStatus = response.data.status;
 
-                    switch(this.gameStatus){
+                    this.secondsRemaining = response.data.secondsRemaining;
+                    switch (this.gameStatus) {
                         case 'Not in Game': // If there's a upcoming game, tell player when it's coming
-                            this.secondsRemaining = response.data.secondsRemaining;
                             break;
                         case 'Waiting for Game': // Inform the user how long they have to wait
-                            this.secondsRemaining = response.data.secondsRemaining;
                             break;
                         case 'Asking Question':
-                            this.secondsRemaining = response.data.secondsRemaining; // How long they have to answer
                             this.questionData = response.data.currentQuestion;
                             this.questionStatistics = null;
-                            this.isPlayerDisqualified = response.data.player.isDisqualified;
-                            this.playerScore = response.data.player.score;
                             this.$children[0].setTimerTo(this.secondsRemaining);
                             break;
                         case 'Viewing Answer Poll':
-                            this.secondsRemaining = response.data.secondsRemaining;
+                            //this.questionStatistics = response.data.currentQuestion.statistics;
+                            this.questionStatistics = this.parseQuestionStatistics(response.data.currentQuestion.statistics);
                             this.isPlayerDisqualified = response.data.player.isDisqualified;
                             this.playerScore = response.data.player.score;
-                            this.questionStatistics = response.data.currentQuestion.statistics;
                             this.$children[0].setTimerTo(this.secondsRemaining);
                             break;
                         default:
@@ -190,11 +189,13 @@
                     setTimeout(this.answerCurrentQuestion, 100);
                     return false;
                 }
-                this.showQuestion=false;
-                axios.put(`${this.url}/api/game/answerQuestion`,{
-                        userSecretToken: this.userSecret,
-                        answerGiven: answerStr
-                    }).then((response) => {
+                this.showQuestion = false;
+                axios.put(`${this.url}/api/game/answerQuestion`, {
+                    userSecretToken: this.userSecret,
+                    answerGiven: answerStr
+                }).then((response) => {
+                    this.isQuestionReadOnly = true;
+                    //this.$children[1].setReadOnly(true);
                 });
 
             },

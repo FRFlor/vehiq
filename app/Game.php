@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\DB;
  * @property string $startTime
  * @property int $secondsToAnswerQuestion
  * @property int $secondsToReadQuestionStats
- * @property int $secondsToSeeScoreboard
  * @property \Carbon\Carbon|null $createdAt
  * @property \Carbon\Carbon|null $updatedAt
  * @property-read mixed $areAllPlayersDisqualified
@@ -29,11 +28,10 @@ use Illuminate\Support\Facades\DB;
  * @property-read mixed $isCurrentQuestionBeingAsked
  * @property-read mixed $isCurrentQuestionDisplayingStats
  * @property-read mixed $isOver
- * @property-read mixed $isShowingScoreboard
+ * @property-read mixed $minimumSecondsToShowStatsOfAllAnswers
  * @property-read mixed $numberOfQuestions
  * @property-read mixed $secondsRemainingToAnswerQuestion
  * @property-read mixed $secondsRemainingToReadQuestionStats
- * @property-read mixed $secondsSinceEnd
  * @property-read mixed $secondsSinceStarted
  * @property-read mixed $secondsUntilStart
  * @property-read mixed $totalSecondsPerQuestion
@@ -43,7 +41,6 @@ use Illuminate\Support\Facades\DB;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereSecondsToAnswerQuestion($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereSecondsToReadQuestionStats($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereSecondsToSeeScoreboard($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereStartTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Game whereUpdatedAt($value)
  * @mixin \Eloquent
@@ -122,15 +119,7 @@ class Game extends Model
             return static::orderBy('id','DESC')->first();
         }
 
-
-        $gameId = DB::table('games')
-            ->join('game_user', 'games.id', '=', 'game_user.game_id')
-            ->where('game_user.user_id', '=', $userId)
-            ->orderBy('games.id','DESC')
-            ->pluck('games.id')
-            ->first();
-
-        return static::find($gameId);
+        return User::find($userId)->games()->orderBy('id','DESC')->first();;
 
     }
 
@@ -195,9 +184,16 @@ class Game extends Model
 
     function getIsOverAttribute()
     {
-        // The time for all the questions has finished or all players already lost the game
+        // There has been enough time to show all questions... end the game
         if($this->secondsSinceStarted > 0 && $this->currentQuestionNumber === static::NO_QUESTION_NUMBER)
-            //|| $this->areAllPlayersDisqualified)
+        {
+            return true;
+        }
+
+        // If all players are disqualified and there has been enough time to show the statistics of the
+        // question that disqualified the very last player... end the game
+        if ($this->areAllPlayersDisqualified &&
+            $this->secondsSinceStarted >= $this->minimumSecondsToShowStatsOfAllAnswers)
         {
             return true;
         }
@@ -233,6 +229,24 @@ class Game extends Model
         return (-1)*$this->secondsUntilStart;
     }
 
+
+    public function getMinimumSecondsToShowStatsOfAllAnswersAttribute(){
+        $lastQuestionNumber = 0;
+        foreach($this->questions()->orderBy('id','ASC')->get() as $question)
+        {
+            if ($question->users()->count() == 0){
+                break;
+            }
+            $lastQuestionNumber++;
+        }
+
+        if ($lastQuestionNumber === 0)
+        {
+            return 0;
+        }
+
+        return $this->totalSecondsPerQuestion*$lastQuestionNumber;
+    }
 
 
 }

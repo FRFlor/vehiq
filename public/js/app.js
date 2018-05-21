@@ -47571,17 +47571,21 @@ if (false) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(61)
+}
 var normalizeComponent = __webpack_require__(2)
 /* script */
 var __vue_script__ = __webpack_require__(47)
 /* template */
-var __vue_template__ = __webpack_require__(48)
+var __vue_template__ = __webpack_require__(63)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
-var __vue_styles__ = null
+var __vue_styles__ = injectStyle
 /* scopeId */
-var __vue_scopeId__ = null
+var __vue_scopeId__ = "data-v-417b5bc6"
 /* moduleIdentifier (server only) */
 var __vue_module_identifier__ = null
 var Component = normalizeComponent(
@@ -47643,6 +47647,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: ['questionData', 'questionStatistics', 'isReadOnly'],
@@ -47654,81 +47666,16 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         onAlternativeClicked: function onAlternativeClicked(alternative) {
             console.log('Alternative ' + alternative + ' was clicked!');
             this.$emit('alternative-clicked', alternative);
+        },
+        setReadOnly: function setReadOnly(newReadOnlyState) {
+            this.isReadOnly = newReadOnlyState;
         }
     },
     mounted: function mounted() {}
 });
 
 /***/ }),
-/* 48 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _vm.questionData
-    ? _c("div", [
-        _c("h1", [
-          _vm._v("Question " + _vm._s(_vm.questionData["questionNumber"]) + ":")
-        ]),
-        _vm._v(" "),
-        _c("h4", [_vm._v(_vm._s(_vm.questionData["statement"]))]),
-        _vm._v(" "),
-        _c("br"),
-        _vm._v(" "),
-        !_vm.questionStatistics
-          ? _c("div", [
-              _c(
-                "ul",
-                { staticClass: "list-group" },
-                _vm._l(_vm.questionData["choices"], function(alternative) {
-                  return _c("li", { staticClass: "list-unstyled" }, [
-                    _c(
-                      "button",
-                      {
-                        staticClass: "btn-sm btn-block m-1",
-                        on: {
-                          click: function($event) {
-                            _vm.onAlternativeClicked(alternative)
-                          }
-                        }
-                      },
-                      [_vm._v(_vm._s(alternative))]
-                    )
-                  ])
-                })
-              )
-            ])
-          : _c("div", [
-              _c(
-                "ul",
-                { staticClass: "list-group" },
-                _vm._l(_vm.questionStatistics, function(answer) {
-                  return _c("li", { staticClass: "list-unstyled" }, [
-                    _c("button", { staticClass: "btn-sm btn-block m-1" }, [
-                      _vm._v(
-                        _vm._s(answer.answerText) + " " + _vm._s(answer.count)
-                      )
-                    ])
-                  ])
-                })
-              )
-            ])
-      ])
-    : _vm._e()
-}
-var staticRenderFns = []
-render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
-if (false) {
-  module.hot.accept()
-  if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-417b5bc6", module.exports)
-  }
-}
-
-/***/ }),
+/* 48 */,
 /* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -47814,7 +47761,7 @@ exports = module.exports = __webpack_require__(52)(false);
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
 
 // exports
 
@@ -48255,28 +48202,31 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         //
         // Support Methods
         //
-        parseQuestionStatistics: function parseQuestionStatistics(choicesStats) {
-
-            var processedStatistics = [];
-
-            // The answers in the backend are in order (right, wrong1, wrong2)
-            // The answers shown to the user are in randomized order
-            // The following loop applies the statistic data to the corresponding answer
-            for (var i = 0; i < this.questionData['choices'].length; i++) {
-                var answerText = this.questionData['choices'][i];
-                for (var j = 0; j < choicesStats.length; j++) {
-                    if (choicesStats[j] === answerText) {
-                        processedStatistics.push({
-                            'text': answerText,
-                            'count': choicesStats[j]['count']
-                        });
-                    }
-                    break;
+        getChoiceCountForAnswer: function getChoiceCountForAnswer(answerText, choicesStats) {
+            for (var i = 0; i < choicesStats.length; i++) {
+                if (answerText === choicesStats[i].answerText) {
+                    return choicesStats[i].count;
                 }
-                break;
             }
 
-            return processedStatistics;
+            return 0;
+        },
+        parseQuestionStatistics: function parseQuestionStatistics(choicesStats) {
+
+            return {
+                choiceA: {
+                    answerText: this.questionData.choices.choiceA,
+                    count: this.getChoiceCountForAnswer(this.questionData.choices.choiceA, choicesStats)
+                },
+                choiceB: {
+                    answerText: this.questionData.choices.choiceB,
+                    count: this.getChoiceCountForAnswer(this.questionData.choices.choiceB, choicesStats)
+                },
+                choiceC: {
+                    answerText: this.questionData.choices.choiceC,
+                    count: this.getChoiceCountForAnswer(this.questionData.choices.choiceC, choicesStats)
+                }
+            };
         },
 
 
@@ -48299,7 +48249,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         _this.getUserSecret(); //TODO: Ask Dan if Recursion is frowned upon
                     });
                     return false;
-                };
+                }
+                ;
 
                 // Secret successfully received, save it!
                 _this.userSecret = getAuthResponse.data[0].secret;
@@ -48318,28 +48269,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             window.axios.get(this.url + '/api/game/getStatus?userSecretToken=' + this.userSecret).then(function (response) {
                 _this2.gameStatus = response.data.status;
 
+                _this2.secondsRemaining = response.data.secondsRemaining;
                 switch (_this2.gameStatus) {
                     case 'Not in Game':
                         // If there's a upcoming game, tell player when it's coming
-                        _this2.secondsRemaining = response.data.secondsRemaining;
                         break;
                     case 'Waiting for Game':
                         // Inform the user how long they have to wait
-                        _this2.secondsRemaining = response.data.secondsRemaining;
                         break;
                     case 'Asking Question':
-                        _this2.secondsRemaining = response.data.secondsRemaining; // How long they have to answer
                         _this2.questionData = response.data.currentQuestion;
                         _this2.questionStatistics = null;
-                        _this2.isPlayerDisqualified = response.data.player.isDisqualified;
-                        _this2.playerScore = response.data.player.score;
                         _this2.$children[0].setTimerTo(_this2.secondsRemaining);
                         break;
                     case 'Viewing Answer Poll':
-                        _this2.secondsRemaining = response.data.secondsRemaining;
+                        //this.questionStatistics = response.data.currentQuestion.statistics;
+                        _this2.questionStatistics = _this2.parseQuestionStatistics(response.data.currentQuestion.statistics);
                         _this2.isPlayerDisqualified = response.data.player.isDisqualified;
                         _this2.playerScore = response.data.player.score;
-                        _this2.questionStatistics = response.data.currentQuestion.statistics;
                         _this2.$children[0].setTimerTo(_this2.secondsRemaining);
                         break;
                     default:
@@ -48351,6 +48298,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             });
         },
         answerCurrentQuestion: function answerCurrentQuestion(answerStr) {
+            var _this3 = this;
+
             console.log('Answering with ' + answerStr);
 
             if (this.userSecret === '') {
@@ -48363,10 +48312,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             axios.put(this.url + '/api/game/answerQuestion', {
                 userSecretToken: this.userSecret,
                 answerGiven: answerStr
-            }).then(function (response) {});
+            }).then(function (response) {
+                _this3.isQuestionReadOnly = true;
+                //this.$children[1].setReadOnly(true);
+            });
         },
         requestToJoinGame: function requestToJoinGame() {
-            var _this3 = this;
+            var _this4 = this;
 
             if (this.userSecret === '') {
                 // If there's no user secret. Ignore the request.
@@ -48378,7 +48330,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             axios.post(this.url + '/api/game/joinGame', {
                 userSecretToken: this.userSecret
             }).then(function () {
-                _this3.getGameStatus();
+                _this4.getGameStatus();
             });
         }
     },
@@ -48453,7 +48405,7 @@ var render = function() {
             _c("question", {
               attrs: {
                 "question-data": _vm.questionData,
-                "read-only": _vm.isQuestionReadOnly
+                "is-read-only": _vm.isQuestionReadOnly
               },
               on: { "alternative-clicked": _vm.answerCurrentQuestion }
             })
@@ -48498,6 +48450,133 @@ if (false) {
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 58 */,
+/* 59 */,
+/* 60 */,
+/* 61 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(62);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(53)("9fcc0c60", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-417b5bc6\",\"scoped\":true,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Question.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-417b5bc6\",\"scoped\":true,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Question.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 62 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(52)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.readOnlyButton[data-v-417b5bc6]{\n    background: #8c959d;\n    color: #f5f8fa;\n}\n.statisticsButton[data-v-417b5bc6]{\n    background: #8c959d;\n    color: #e6eed8;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 63 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _vm.questionData
+    ? _c("div", [
+        _c("div", { staticClass: "jumbotron" }, [
+          _c("h1", { staticClass: "display-3" }, [
+            _vm._v("Question " + _vm._s(_vm.questionData["questionNumber"]))
+          ]),
+          _vm._v(" "),
+          _c("p", { staticClass: "lead" }, [
+            _vm._v(_vm._s(_vm.questionData["statement"]))
+          ]),
+          _vm._v(" "),
+          _c("hr", { staticClass: "my-2" }),
+          _vm._v(" "),
+          !_vm.questionStatistics
+            ? _c("div", [
+                _c(
+                  "ul",
+                  { staticClass: "list-group" },
+                  _vm._l(_vm.questionData["choices"], function(alternative) {
+                    return _c("li", { staticClass: "list-unstyled" }, [
+                      _vm.isReadOnly
+                        ? _c(
+                            "button",
+                            {
+                              staticClass: "btn-sm btn-block m-1 readOnlyButton"
+                            },
+                            [_vm._v(_vm._s(alternative))]
+                          )
+                        : _c(
+                            "button",
+                            {
+                              staticClass: "btn-sm btn-block m-1",
+                              on: {
+                                click: function($event) {
+                                  _vm.onAlternativeClicked(alternative)
+                                }
+                              }
+                            },
+                            [_vm._v(_vm._s(alternative))]
+                          )
+                    ])
+                  })
+                )
+              ])
+            : _c("div", [
+                _c(
+                  "ul",
+                  { staticClass: "list-group" },
+                  _vm._l(_vm.questionStatistics, function(answer) {
+                    return _c("li", { staticClass: "list-unstyled" }, [
+                      _c("button", { staticClass: "btn readOnlyButton" }),
+                      _vm._v(" "),
+                      _c("span", { staticClass: "badge-warning" }, [
+                        _vm._v(_vm._s(answer.count))
+                      ]),
+                      _vm._v(
+                        " " + _vm._s(answer.answerText) + "\n                "
+                      )
+                    ])
+                  })
+                )
+              ])
+        ])
+      ])
+    : _vm._e()
+}
+var staticRenderFns = []
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-417b5bc6", module.exports)
+  }
+}
 
 /***/ })
 /******/ ]);
