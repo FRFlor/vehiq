@@ -16,7 +16,7 @@ class PivotRelationsSeeder extends Seeder
         // Register some users to games
         for($i=1; $i<4; $i++)
         {
-            User::find($i)->enrollIntoGame();
+            User::find($i)->joinGame();
         }
 
 

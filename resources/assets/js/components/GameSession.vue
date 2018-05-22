@@ -10,9 +10,10 @@
         <!--The server informed that the current user is not enrolled in any upcoming games-->
         <div v-if="gameStatus === 'Not in Game'">
             You are not part of any game... (Sorry!)
-            <div v-if="secondsRemaining != 0">
+            <div v-if="secondsRemaining !== 0">
                 But hey! There's a game coming soon!
-                <game-timer :start-seconds="secondsRemaining"></game-timer>
+                <game-timer :seconds-count="secondsRemaining"
+                            @time-expired="getGameStatus" @time-tick="onTimeTick"></game-timer>
 
                 <button @click="requestToJoinGame">Let me join it!</button>
             </div>
@@ -23,32 +24,29 @@
         <div v-if="gameStatus === 'Waiting for Game'">
             Waiting for game!
 
-            <game-timer :start-seconds="secondsRemaining"
-                        @time-expired="getGameStatus"></game-timer>
+            <game-timer :seconds-count="secondsRemaining"
+                        @time-expired="getGameStatus" @time-tick="onTimeTick"></game-timer>
         </div>
 
 
-        <!--The server informed the user is currently in the process of answering a question-->
-        <div v-if="gameStatus === 'Asking Question'">
-            <game-timer :start-seconds="secondsRemaining"
-                        @time-expired="getGameStatus"></game-timer>
+        <!--The server informed the user is currently playing the game-->
+        <div v-if="gameStatus === 'Asking Question' || gameStatus === 'Viewing Answer Poll'">
 
-            <question :question-data="questionData"
+            <div>{{playerName}}'s Score: {{playerScore}}</div>
+            <game-timer :seconds-count="secondsRemaining"
+                        @time-expired="getGameStatus" @time-tick="onTimeTick"></game-timer>
+
+
+            <question v-if="gameStatus === 'Asking Question'"
+                      :question-data="questionData"
                       :is-read-only="isQuestionReadOnly"
                       @alternative-clicked="answerCurrentQuestion"></question>
-        </div>
 
-
-        <!--The server informed the user is currently in the process of viewing answer poll-->
-        <div v-if="gameStatus === 'Viewing Answer Poll'">
-            <game-timer :start-seconds="secondsRemaining"
-                        @time-expired="getGameStatus"></game-timer>
-
-            <question :question-data="questionData"
+            <question v-if="gameStatus === 'Viewing Answer Poll'"
+                      :question-data="questionData"
                       :question-statistics="questionStatistics"
             ></question>
         </div>
-
 
     </div>
 </template>
@@ -76,40 +74,43 @@
         },
         watch: {
             questionData: function () {
-                this.$children[0].setTimerTo(this.secondsRemaining);
-
                 this.isQuestionReadOnly =
                     (this.isPlayerDisqualified || this.gameStatus === 'Viewing Answer Poll');
             }
         },
         methods: {
+            onTimeTick(){
+              this.secondsRemaining--;  //Keeping the GameSession up-to-date to the Timer
+            },
+
             //
             // Support Methods
             //
-            getChoiceCountForAnswer(answerText, choicesStats) {
+            getStatsForAnswer(answerText, choicesStats) {
                 for(let i = 0; i < choicesStats.length; i++){
                     if(answerText === choicesStats[i].answerText){
-                        return choicesStats[i].count;
+                        return {
+                            answerText: answerText,
+                            count: choicesStats[i].count,
+                            isRightChoice: (i === 0), // The answers are stored in the database
+                                                    // as (right, wrong1, wrong2) therefore
+                                                    // the right alternative always comes first
+                        };
                     }
                 }
 
-                return 0;
+                return {
+                    answerText: "N.A.",
+                    count: 0,
+                    isRightChoice: false,
+                };
             },
             parseQuestionStatistics(choicesStats) {
 
                 return {
-                    choiceA: {
-                        answerText: this.questionData.choices.choiceA,
-                        count: this.getChoiceCountForAnswer(this.questionData.choices.choiceA,choicesStats)
-                    },
-                    choiceB: {
-                        answerText: this.questionData.choices.choiceB,
-                        count: this.getChoiceCountForAnswer(this.questionData.choices.choiceB,choicesStats)
-                    },
-                    choiceC: {
-                        answerText: this.questionData.choices.choiceC,
-                        count: this.getChoiceCountForAnswer(this.questionData.choices.choiceC,choicesStats)
-                    },
+                    choiceA: this.getStatsForAnswer(this.questionData.choices.choiceA,choicesStats),
+                    choiceB: this.getStatsForAnswer(this.questionData.choices.choiceB,choicesStats),
+                    choiceC: this.getStatsForAnswer(this.questionData.choices.choiceC,choicesStats),
                 };
             },
 
@@ -131,20 +132,17 @@
                                 this.getUserSecret(); //TODO: Ask Dan if Recursion is frowned upon
                             });
                             return false;
-                        }
-                        ;
+                        };
 
                         // Secret successfully received, save it!
                         this.userSecret = getAuthResponse.data[0].secret;
                     });
             },
-
-
             getGameStatus() {
                 if (this.userSecret === '') {
                     // If there's no user secret. Ignore the request.
                     console.log('User Secret is required to communicate with the API, request for status cannot be sent');
-                    setTimeout(this.getGameStatus, 100);
+                    setTimeout(this.getGameStatus, 500);
                     return false;
                 }
 
@@ -160,14 +158,12 @@
                         case 'Asking Question':
                             this.questionData = response.data.currentQuestion;
                             this.questionStatistics = null;
-                            this.$children[0].setTimerTo(this.secondsRemaining);
                             break;
                         case 'Viewing Answer Poll':
                             //this.questionStatistics = response.data.currentQuestion.statistics;
                             this.questionStatistics = this.parseQuestionStatistics(response.data.currentQuestion.statistics);
                             this.isPlayerDisqualified = response.data.player.isDisqualified;
                             this.playerScore = response.data.player.score;
-                            this.$children[0].setTimerTo(this.secondsRemaining);
                             break;
                         default:
                             Console.log(`Unhandled gameStatue = ${response.data.status}`);
@@ -186,16 +182,15 @@
                 if (this.userSecret === '') {
                     // If there's no user secret. Ignore the request.
                     console.log('User Secret is required to communicate with the API, answer request cannot be sent');
-                    setTimeout(this.answerCurrentQuestion, 100);
+                    setTimeout(this.answerCurrentQuestion, 500);
                     return false;
                 }
                 this.showQuestion = false;
-                axios.put(`${this.url}/api/game/answerQuestion`, {
+                axios.post(`${this.url}/api/game/answerQuestion`, {
                     userSecretToken: this.userSecret,
                     answerGiven: answerStr
                 }).then((response) => {
                     this.isQuestionReadOnly = true;
-                    //this.$children[1].setReadOnly(true);
                 });
 
             },
@@ -205,7 +200,7 @@
                 if (this.userSecret === '') {
                     // If there's no user secret. Ignore the request.
                     console.log('User Secret is required to communicate with the API, answer request cannot be sent');
-                    setTimeout(this.requestToJoinGame, 100);
+                    setTimeout(this.requestToJoinGame, 500);
                     return false;
                 }
 
