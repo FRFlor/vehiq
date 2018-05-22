@@ -20,6 +20,7 @@ use Laravel\Passport\HasApiTokens;
  * @property \Carbon\Carbon|null $updatedAt
  * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[] $clients
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Game[] $games
+ * @property-read mixed $hasAnsweredCurrentQuestion
  * @property-read mixed $isCurrentlyInGame
  * @property-read mixed $isDisqualified
  * @property-read mixed $score
@@ -160,5 +161,19 @@ class User extends Authenticatable
         }
 
         return $this->games()->save($game) ? true : false;
+    }
+
+
+    function getHasAnsweredCurrentQuestionAttribute()
+    {
+        $currentGame = Game::currentGame($this->id);
+
+        if(!$currentGame){
+            return false;
+        }
+
+        return $this->questions()
+                ->where('game_id',$currentGame->id)
+                ->count() >= $currentGame->currentQuestionNumber;
     }
 }

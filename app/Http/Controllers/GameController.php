@@ -31,6 +31,13 @@ class GameController extends Controller
         $userSecret = $request->input('userSecretToken');
         $currentUser = User::findBySecretToken($userSecret);
 
+
+        if ($currentUser->isDisqualified ||
+        !$currentUser->isCurrentlyInGame ||
+        $currentUser->hasAnsweredCurrentQuestion){
+            return response()->json(['answerStored' => false], Response::HTTP_OK);
+        }
+
         $answerGiven = $request->input('answerGiven');
         $currentUser->answerQuestion($answerGiven);
 

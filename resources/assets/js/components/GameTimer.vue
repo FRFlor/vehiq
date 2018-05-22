@@ -1,40 +1,31 @@
 <template>
-    <div><p v-if="remainingSeconds > 0"> {{hours}}:{{minutes}}:{{seconds}} </p>
-        <p v-if="remainingSeconds <= 0">Time's up</p>
+    <div><p v-if="secondsCount > 0"> {{hours}}:{{minutes}}:{{seconds}} </p>
+        <p v-if="secondsCount <= 0">Time's up</p>
     </div>
 
 </template>
 
 <script>
     export default {
-        props: ['startSeconds']
+        props: ['secondsCount']
         ,
         data() {
             return {
-                remainingSeconds: null,
             }
         },
         methods: {
-            setTimerTo(newSeconds){
-              this.remainingSeconds = newSeconds;
-            },
-            resetTimer(){
-                this.setTimerTo(this.startSeconds);
-            },
             timerLoop() {
-                if (this.remainingSeconds > 0) {
-                    this.remainingSeconds--;
+
+                if (this.secondsCount > 0) {
+                    this.$emit("time-tick");
                 }
 
-                if (this.remainingSeconds <= 0) {
+                if (this.secondsCount <= 0) {
                     this.$emit("time-expired");
                 }
 
                 return setTimeout(this.timerLoop, 1000);
 
-            },
-            isRunning() {
-                return (this.remainingSeconds > 0);
             },
             forceDoubleDigits(number) {
                 // Numbers with 3 or more digits
@@ -52,18 +43,17 @@
             },
         },
         mounted() {
-            this.remainingSeconds = this.startSeconds;
             this.timerLoop();
         },
         computed: {
             seconds() {
-                return this.forceDoubleDigits((this.remainingSeconds) % 60);
+                return this.forceDoubleDigits((this.secondsCount) % 60);
             },
             minutes() {
-                return this.forceDoubleDigits(Math.trunc((this.remainingSeconds) / 60) % 60);
+                return this.forceDoubleDigits(Math.trunc((this.secondsCount) / 60) % 60);
             },
             hours() {
-                return this.forceDoubleDigits(Math.trunc((this.remainingSeconds) / 60 / 24) % 24);
+                return this.forceDoubleDigits(Math.trunc((this.secondsCount) / 60 / 24) % 24);
             },
         }
     }
