@@ -6,22 +6,15 @@ use App\Game;
 use App\User;
 use App\Question;
 use Tests\TestCase;
-
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use \Illuminate\Foundation\Testing\DatabaseMigrations;
 
 class GameApiTest extends TestCase
 {
-    //use RefreshDatabase;   TODO: Ask why this only works for the very first test
-
     // The player is not in any game yet
     // The api should know that and inform the player of an upcoming game
     public function testItInformsPlayerOfUpcomingGameWhenPlayerIsNotInAnyGame(){
-        $this->artisan('migrate:fresh');
+        //$this->artisan('migrate:fresh');
 
         //
         // SET UP
@@ -52,18 +45,19 @@ class GameApiTest extends TestCase
         //
         // ASSESSMENT
         //
-        $response->assertExactJson([
-            'status' => 'Not in Game',
-            'secondsRemaining' => 35,
+        $response->assertJsonFragment([
+            'status' => 'Not in Game'
         ]);
+
+        $this->assertGreaterThan(30,$response->json()['secondsRemaining']);
+
     }
 
 
     // The player is not in any game and requests the API to put them into a game
     public function testItAllowsPlayerToJoinGame()
     {
-        $this->artisan('migrate:fresh');
-
+        //$this->artisan('migrate:fresh');
         //
         // SET UP
         //
@@ -103,8 +97,6 @@ class GameApiTest extends TestCase
     // the API to join another game. The api should reject the request.
     public function testItPreventsPlayerFromJoiningMultipleGames()
     {
-        $this->artisan('migrate:fresh');
-
         //
         // SET UP
         //
@@ -149,7 +141,7 @@ class GameApiTest extends TestCase
     // The player is currently enrolled in a game
     // The api should inform the player how long it will take until the game starts
     public function testItInformsPlayerOfUpcomingGameWhenPlayerIsWaitingForGameToStart(){
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -193,7 +185,7 @@ class GameApiTest extends TestCase
     // The player is enrolled in a game, and the game has already started!
     // Test if the api is asking the player a question.
     public function testItRecognizesWhenAGameStarts(){
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -245,7 +237,7 @@ class GameApiTest extends TestCase
     // even when there are more questions available to ask
     public function testItEndsTheGameIfAllPlayersAreDisqualified()
     {
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -303,7 +295,7 @@ class GameApiTest extends TestCase
     // - Wait for question statistics time to expire
     // - End game  (since all players have been disqualified)
     public function testItKeepsTheGameLoopCompleteEvenWhenAllPlayersHaveBeenDisqualified(){
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -366,7 +358,7 @@ class GameApiTest extends TestCase
     // This function tests if the game ends after all questions have been asked
     public function testItEndsTheGameIfAllQuestionsHaveBeenAsked()
     {
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -423,7 +415,7 @@ class GameApiTest extends TestCase
     // they are disqualified
     public function testItDisqualifiesAPlayerForTimeOut()
     {
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -473,7 +465,7 @@ class GameApiTest extends TestCase
 
     // A player that is disqualified is free to watch the game that is in-progress
     function testItAllowsADisqualifiedPlayerToWatchTheGame(){
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -552,7 +544,7 @@ class GameApiTest extends TestCase
     // Even though disqualified players are able to watch the game, they should
     // not be able to answer questions.
     function testItIgnoreRequestsToAnswerQuestionFromDisqualifiedPlayers(){
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -641,7 +633,7 @@ class GameApiTest extends TestCase
 
     // A player may only answer a given question once, the api needs to enforce this rule
     function testItIgnoresSubsequentRequestsToAnswerQuestion(){
-        $this->artisan('migrate:fresh');
+
 
         //
         // SET UP
@@ -695,6 +687,61 @@ class GameApiTest extends TestCase
 
 
 
+    public function testItKeepsTrackOfThePlayerScore(){
+
+
+        //
+        // SET UP
+        //
+        // Create a game with 12 questions
+        factory(Game::class)->create([
+            'secondsToAnswerQuestion' => 10,
+            'secondsToReadQuestionStats' => 5]);
+        $this->addMultipleQuestionsToLatestGame(12);
+
+        // Create a user that is enrolled in the game
+        factory(User::class)->create();
+        $this->addFakeSecretTokenForPlayer(1);
+        User::find(1)->joinGame();
+
+        // Retrieve the player's secret (to use the game api)
+        $this->actingAs(User::find(1));
+        $secret = $this->getJson('/oauth/clients')
+            ->json()[0]['secret']; // Used to identify user
+
+        $game = Game::find(1);
+
+        //
+        // EXECUTION + ASSESSMENT
+        //
+        // The player starts the game with 0 points
+        $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
+
+        // The player answers the first question correctly
+        $game->update(['startTime' => Carbon::now()->subSeconds(5)]);
+        User::find(1)->answerQuestion($game->currentQuestion->rightAnswer);
+        $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
+        $response->assertJsonFragment([
+            'score' => 1
+        ]);
+
+        // The player answers the second question correctly
+        $game->update(['startTime' => Carbon::now()->subSeconds(20)]);
+        User::find(1)->answerQuestion($game->currentQuestion->rightAnswer);
+        $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
+        $response->assertJsonFragment([
+            'score' => 2
+        ]);
+
+
+        // The player answers the third question wrong (Score shouldn't change)
+        $game->update(['startTime' => Carbon::now()->subSeconds(35)]);
+        User::find(1)->answerQuestion($game->currentQuestion->wrongAnswer1);
+        $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
+        $response->assertJsonFragment([
+            'score' => 2
+        ]);
+    }
 
 
 

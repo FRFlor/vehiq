@@ -149,6 +149,7 @@
                 window.axios.get(`${this.url}/api/game/getStatus?userSecretToken=${this.userSecret}`).then((response) => {
                     this.gameStatus = response.data.status;
 
+                    // TODO: const the strings
                     this.secondsRemaining = response.data.secondsRemaining;
                     switch (this.gameStatus) {
                         case 'Not in Game': // If there's a upcoming game, tell player when it's coming

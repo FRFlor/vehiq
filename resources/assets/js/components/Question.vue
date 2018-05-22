@@ -10,9 +10,10 @@
                 <ul class="list-group">
                     <li class="list-unstyled" v-for="alternative in questionData['choices']">
                         <button v-if="isReadOnly" class="btn-sm btn-block m-1 readOnlyButton"
-                                :class="{'readOnlySelectedButton': alternative === lastAnswer}">{{alternative}}</button>
+                                :class="{'readOnlySelectedButton': alternative === lastAnswer}"
+                                disabled>{{alternative}}</button>
 
-                        <button v-else class="btn-sm btn-block m-1" @click="onAlternativeClicked(alternative)">{{alternative}}</button>
+                        <button v-else class="btn-sm btn-block m-1 regularButton" @click="onAlternativeClicked(alternative)">{{alternative}}</button>
                     </li>
                 </ul>
             </div>
@@ -62,6 +63,9 @@
 </script>
 
 <style scoped>
+    .regularButton{
+        background: whitesmoke;
+    }
     .readOnlyButton{
         background: #8c959d;
         color: #f5f8fa;

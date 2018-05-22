@@ -47951,7 +47951,7 @@ exports = module.exports = __webpack_require__(12)(false);
 
 
 // module
-exports.push([module.i, "\n.readOnlyButton[data-v-417b5bc6]{\n    background: #8c959d;\n    color: #f5f8fa;\n}\n.readOnlySelectedButton[data-v-417b5bc6]{\n    background: #2b73bd;\n    color: #f5f8fa;\n}\n.selected[data-v-417b5bc6]{\n    font-weight: bolder;\n}\n.success[data-v-417b5bc6]{\n    background: mediumseagreen;\n}\n.fail[data-v-417b5bc6]{\n    background: indianred;\n}\n", ""]);
+exports.push([module.i, "\n.regularButton[data-v-417b5bc6]{\n    background: whitesmoke;\n}\n.readOnlyButton[data-v-417b5bc6]{\n    background: #8c959d;\n    color: #f5f8fa;\n}\n.readOnlySelectedButton[data-v-417b5bc6]{\n    background: #2b73bd;\n    color: #f5f8fa;\n}\n.selected[data-v-417b5bc6]{\n    font-weight: bolder;\n}\n.success[data-v-417b5bc6]{\n    background: mediumseagreen;\n}\n.fail[data-v-417b5bc6]{\n    background: indianred;\n}\n", ""]);
 
 // exports
 
@@ -47995,6 +47995,7 @@ module.exports = function listToStyles (parentId, list) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
 //
 //
 //
@@ -48093,14 +48094,15 @@ var render = function() {
                               class: {
                                 readOnlySelectedButton:
                                   alternative === _vm.lastAnswer
-                              }
+                              },
+                              attrs: { disabled: "" }
                             },
                             [_vm._v(_vm._s(alternative))]
                           )
                         : _c(
                             "button",
                             {
-                              staticClass: "btn-sm btn-block m-1",
+                              staticClass: "btn-sm btn-block m-1 regularButton",
                               on: {
                                 click: function($event) {
                                   _vm.onAlternativeClicked(alternative)

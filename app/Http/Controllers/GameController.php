@@ -31,6 +31,7 @@ class GameController extends Controller
         $userSecret = $request->input('userSecretToken');
         $currentUser = User::findBySecretToken($userSecret);
 
+        //TODO: Use HTTP codes for refusals
 
         if ($currentUser->isDisqualified ||
         !$currentUser->isCurrentlyInGame ||

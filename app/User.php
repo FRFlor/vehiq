@@ -125,6 +125,7 @@ class User extends Authenticatable
 
     function answerQuestion($answerGiven)
     {
+        // TODO: Move the checks from the controller to here
         // Someone that is disqualified cannot answer questions, only watch them
         if ($this->isDisqualified) {
             return false;
