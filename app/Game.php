@@ -51,6 +51,11 @@ class Game extends Model
     protected $fillable = ['startTime', 'secondsPerQuestion', 'currentQuestionNumber'];
     const NO_QUESTION_NUMBER = 0;
 
+//    function newCollection(array $models = []){
+//        // return new Games($models)
+//        // TODO: Read more about custom collections
+//    }
+
     function questions()
     {
         return $this->hasMany(Question::class);
