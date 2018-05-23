@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read mixed $currentQuestionNumber
  * @property-read mixed $isCurrentQuestionBeingAsked
  * @property-read mixed $isCurrentQuestionDisplayingStats
+ * @property-read mixed $isInProgress
  * @property-read mixed $isOver
  * @property-read mixed $minimumSecondsToShowStatsOfAllAnswers
  * @property-read mixed $numberOfQuestions
@@ -188,6 +189,11 @@ class Game extends Model
         }
 
         return false;
+    }
+
+    public function getIsInProgressAttribute()
+    {
+        return ! $this->isOver;
     }
 
     function getAreAllPlayersDisqualifiedAttribute()

@@ -93,9 +93,6 @@ class GameApiTest extends TestCase
     // the API to join another game. The api should reject the request.
     public function testItPreventsPlayerFromJoiningMultipleGames()
     {
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create();
         $this->addMultipleQuestionsToLatestGame(12);
@@ -117,17 +114,11 @@ class GameApiTest extends TestCase
         // Set both games to start in the future
         Game::find(1)->update(['startTime' => Carbon::now()->addSeconds(35)]);
         Game::find(2)->update(['startTime' => Carbon::now()->addSeconds(55)]);
+        // TODO: Comments are a bit of overkill...
 
-
-        //
-        // EXECUTION
-        //
         $response = $this->postJson("/api/game/joinGame?userSecretToken=$secret");
 
 
-        //
-        // ASSESSMENT
-        //
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 

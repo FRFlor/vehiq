@@ -23,10 +23,10 @@ class GameController extends Controller
         $currentUser = User::findBySecretToken($userSecret);
 
         if(!$currentUser->joinGame()){
-            return response()->json([],Response::HTTP_BAD_REQUEST);
+            return response('', Response::HTTP_BAD_REQUEST);
         }
 
-        return response()->json([],Response::HTTP_OK);
+        return response('', Response::HTTP_OK);
     }
 
     function answerQuestion(Request $request)
@@ -40,12 +40,12 @@ class GameController extends Controller
         if ($currentUser->isDisqualified ||
         !$currentUser->isCurrentlyInGame ||
         $currentUser->hasAnsweredCurrentQuestion){
-            return response()->json([], Response::HTTP_BAD_REQUEST);
+            return response('',Response::HTTP_BAD_REQUEST);
         }
 
         $currentUser->answerQuestion($answerGiven);
 
-        return response()->json([], Response::HTTP_OK);
+        return response('',Response::HTTP_OK);
     }
 
 

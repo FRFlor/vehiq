@@ -102,11 +102,12 @@ class User extends Authenticatable
     {
         $currentGame = Game::currentGame($this->id);
 
+        // The user has to be in a game that has started
         if ($currentGame->secondsUntilStart > 0) {
             return false;
         }
 
-        // Check if there is one question wrong
+        // Case 1: Check if there is one question wrong
         foreach ($this->questions as $userResponse) {
             if ($userResponse->game_Id == $currentGame->id &&
                 trim($userResponse->rightAnswer) != trim($userResponse->pivot->answerGiven)) {
@@ -114,7 +115,7 @@ class User extends Authenticatable
             }
         }
 
-        // Check if the player missed one question
+        // Case 2: Check if the player missed one question
         if ($this->questions->count() < $currentGame->currentQuestionNumber - 1 &&
             $currentGame->currentQuestionNumber != 0) {
             return true;
@@ -141,14 +142,18 @@ class User extends Authenticatable
 
     function getIsCurrentlyInGameAttribute()
     {
-        // Is this user in a game that is not over?
-        foreach ($this->games as $game) {
-            if (!$game->isOver) {
-                return true;
-            }
-        }
+        /* Student Notes: Same as:
+        *
+        * $this->>games->contains(($game)=> {
+        *  return $game->isInProgress === true;
+        * };
+        *
+        */
 
-        return false;
+        return $this->games->contains->isInProgress;
+
+
+
     }
 
     function joinGame()
