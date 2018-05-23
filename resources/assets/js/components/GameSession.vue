@@ -2,13 +2,13 @@
     <div>
 
         <!--No information has been obtained from the server yet-->
-        <div v-if="gameStatus === 'Loading'">
+        <div v-if="isLoading">
             Loading...
         </div>
 
 
         <!--The server informed that the current user is not enrolled in any upcoming games-->
-        <div v-if="gameStatus === 'Not in Game'">
+        <div v-if="isNotInGame">
             You are not part of any game... (Sorry!)
             <div v-if="secondsRemaining !== 0">
                 But hey! There's a game coming soon!
@@ -21,7 +21,7 @@
 
 
         <!--The server informed the user is enrolled in a game that will begin soon-->
-        <div v-if="gameStatus === 'Waiting for Game'">
+        <div v-if="isWaitingForGame">
             Waiting for game!
 
             <game-timer :seconds-count="secondsRemaining"
@@ -30,19 +30,19 @@
 
 
         <!--The server informed the user is currently playing the game-->
-        <div v-if="gameStatus === 'Asking Question' || gameStatus === 'Viewing Answer Poll'">
+        <div v-if="isAskingQuestion || isViewingAnswerPolls">
 
             <div>{{playerName}}'s Score: {{playerScore}}</div>
             <game-timer :seconds-count="secondsRemaining"
                         @time-expired="getGameStatus" @time-tick="onTimeTick"></game-timer>
 
 
-            <question v-if="gameStatus === 'Asking Question'"
+            <question v-if="isAskingQuestion"
                       :question-data="questionData"
                       :is-read-only="isQuestionReadOnly"
                       @alternative-clicked="answerCurrentQuestion"></question>
 
-            <question v-if="gameStatus === 'Viewing Answer Poll'"
+            <question v-if="isViewingAnswerPolls"
                       :question-data="questionData"
                       :question-statistics="questionStatistics"
             ></question>
@@ -56,26 +56,39 @@
         props: ['playerName', 'url'],
         data() {
             return {
+
                 userSecret: '',
 
                 gameStatus: 'Loading',
                 secondsRemaining: 0,
 
-                // Question related data
                 questionData: null,
                 questionStatistics: null,
                 isQuestionReadOnly: false,
 
 
-                // Player related data
                 isPlayerDisqualified: false,
                 playerScore: 0,
+
+
+
+
+                // Player related data
+                // Question related data
+                // Constants:
+                statuses: {
+                    LOADING: 'Loading',
+                    NOT_IN_GAME: 'Not in Game',
+                    WAITING_FOR_GAME: 'Waiting for Game',
+                    ASKING_QUESTION: 'Asking Question',
+                    VIEWING_ANSWER_POLL: 'Viewing Answer Poll',
+                },
             }
         },
         watch: {
             questionData: function () {
                 this.isQuestionReadOnly =
-                    (this.isPlayerDisqualified || this.gameStatus === 'Viewing Answer Poll');
+                    (this.isPlayerDisqualified || this.isViewingAnswerPolls);
             }
         },
         methods: {
@@ -87,14 +100,14 @@
             // Support Methods
             //
             getStatsForAnswer(answerText, choicesStats) {
+                const INDEX_OF_RIGHT_ANSWER = 0;
+
                 for(let i = 0; i < choicesStats.length; i++){
                     if(answerText === choicesStats[i].answerText){
                         return {
                             answerText: answerText,
                             count: choicesStats[i].count,
-                            isRightChoice: (i === 0), // The answers are stored in the database
-                                                    // as (right, wrong1, wrong2) therefore
-                                                    // the right alternative always comes first
+                            isRightChoice: (i === INDEX_OF_RIGHT_ANSWER),
                         };
                     }
                 }
@@ -108,9 +121,9 @@
             parseQuestionStatistics(choicesStats) {
 
                 return {
-                    choiceA: this.getStatsForAnswer(this.questionData.choices.choiceA,choicesStats),
-                    choiceB: this.getStatsForAnswer(this.questionData.choices.choiceB,choicesStats),
-                    choiceC: this.getStatsForAnswer(this.questionData.choices.choiceC,choicesStats),
+                    choiceA: this.getStatsForAnswer(this.questionData.choices.choiceA, choicesStats),
+                    choiceB: this.getStatsForAnswer(this.questionData.choices.choiceB, choicesStats),
+                    choiceC: this.getStatsForAnswer(this.questionData.choices.choiceC, choicesStats),
                 };
             },
 
@@ -129,7 +142,7 @@
                                 redirect: this.url,
                             }).then(() => {
                                 // With token now created, re-attempt to retrieve said token
-                                this.getUserSecret(); //TODO: Ask Dan if Recursion is frowned upon
+                                this.getUserSecret();
                             });
                             return false;
                         };
@@ -143,35 +156,38 @@
                     // If there's no user secret. Ignore the request.
                     console.log('User Secret is required to communicate with the API, request for status cannot be sent');
                     setTimeout(this.getGameStatus, 500);
-                    return false;
+                    return;
                 }
 
                 window.axios.get(`${this.url}/api/game/getStatus?userSecretToken=${this.userSecret}`).then((response) => {
                     this.gameStatus = response.data.status;
 
-                    // TODO: const the strings
                     this.secondsRemaining = response.data.secondsRemaining;
                     switch (this.gameStatus) {
-                        case 'Not in Game': // If there's a upcoming game, tell player when it's coming
+                        case this.statuses.NOT_IN_GAME: // If there's a upcoming game, tell player when it's coming
                             break;
-                        case 'Waiting for Game': // Inform the user how long they have to wait
+
+                        case this.statuses.WAITING_FOR_GAME: // Inform the user how long they have to wait
                             break;
-                        case 'Asking Question':
+
+                        case this.statuses.ASKING_QUESTION:
                             this.questionData = response.data.currentQuestion;
                             this.questionStatistics = null;
                             break;
-                        case 'Viewing Answer Poll':
+
+                        case this.statuses.VIEWING_ANSWER_POLL:
                             //this.questionStatistics = response.data.currentQuestion.statistics;
                             this.questionStatistics = this.parseQuestionStatistics(response.data.currentQuestion.statistics);
                             this.isPlayerDisqualified = response.data.player.isDisqualified;
                             this.playerScore = response.data.player.score;
                             break;
+
                         default:
-                            Console.log(`Unhandled gameStatue = ${response.data.status}`);
+                            Console.log(`Unhandled Game Status = ${response.data.status}`);
                             break;
                     }
-
-                    return true;
+                }).catch(()=>{
+                    console.log(`Failed to get Game Status.`)
                 });
 
             },
@@ -191,7 +207,10 @@
                     userSecretToken: this.userSecret,
                     answerGiven: answerStr
                 }).then((response) => {
+                    console.log(`New answer has been registered: (${answerStr}`);
                     this.isQuestionReadOnly = true;
+                }).catch(()=>{
+                    console.log(`Failed to register answer: (${answerStr}`);
                 });
 
             },
@@ -208,9 +227,29 @@
                 axios.post(`${this.url}/api/game/joinGame`, {
                     userSecretToken: this.userSecret,
                 }).then(() => {
+                    console.log(`Game Joined!`);
                     this.getGameStatus();
+                }).catch(()=>{
+                    console.log(`Failed to Join the Game!`);
                 });
             }
+        },
+        computed:{
+            isLoading: function(){
+                return this.gameStatus === this.statuses.LOADING;
+            },
+            isNotInGame: function (){
+                return this.gameStatus === this.statuses.NOT_IN_GAME;
+            },
+            isWaitingForGame: function(){
+                return this.gameStatus === this.statuses.WAITING_FOR_GAME;
+            },
+            isAskingQuestion: function(){
+                return this.gameStatus === this.statuses.ASKING_QUESTION;
+            },
+            isViewingAnswerPolls: function(){
+                return this.gameStatus === this.statuses.VIEWING_ANSWER_POLL;
+            },
         },
         mounted() {
             this.getUserSecret();

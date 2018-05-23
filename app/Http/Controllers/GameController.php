@@ -22,7 +22,11 @@ class GameController extends Controller
         $userSecret = $request->input('userSecretToken');
         $currentUser = User::findBySecretToken($userSecret);
 
-        return response()->json(['hasJoinedGame' => $currentUser->joinGame()], Response::HTTP_OK);
+        if(!$currentUser->joinGame()){
+            return response()->json([],Response::HTTP_BAD_REQUEST);
+        }
+
+        return response()->json([],Response::HTTP_OK);
     }
 
     function answerQuestion(Request $request)
@@ -31,18 +35,17 @@ class GameController extends Controller
         $userSecret = $request->input('userSecretToken');
         $currentUser = User::findBySecretToken($userSecret);
 
-        //TODO: Use HTTP codes for refusals
+        $answerGiven = $request->input('answerGiven');
 
         if ($currentUser->isDisqualified ||
         !$currentUser->isCurrentlyInGame ||
         $currentUser->hasAnsweredCurrentQuestion){
-            return response()->json(['answerStored' => false], Response::HTTP_OK);
+            return response()->json([], Response::HTTP_BAD_REQUEST);
         }
 
-        $answerGiven = $request->input('answerGiven');
         $currentUser->answerQuestion($answerGiven);
 
-        return response()->json(['answerStored' => true], Response::HTTP_OK);
+        return response()->json([], Response::HTTP_OK);
     }
 
 

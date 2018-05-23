@@ -115,7 +115,8 @@ class User extends Authenticatable
         }
 
         // Check if the player missed one question
-        if ($this->questions->count() < $currentGame->currentQuestionNumber - 1 && $currentGame->currentQuestionNumber != 0) {
+        if ($this->questions->count() < $currentGame->currentQuestionNumber - 1 &&
+            $currentGame->currentQuestionNumber != 0) {
             return true;
         }
 
@@ -125,19 +126,22 @@ class User extends Authenticatable
 
     function answerQuestion($answerGiven)
     {
-        // TODO: Move the checks from the controller to here
         // Someone that is disqualified cannot answer questions, only watch them
         if ($this->isDisqualified) {
             return false;
         }
 
-        return $this->questions()
+
+        $this->questions()
             ->save(Game::currentGame($this->id)->currentQuestion,
                 ['answerGiven' => $answerGiven]);
+
+        return true;
     }
 
     function getIsCurrentlyInGameAttribute()
     {
+        // Is this user in a game that is not over?
         foreach ($this->games as $game) {
             if (!$game->isOver) {
                 return true;
@@ -161,7 +165,8 @@ class User extends Authenticatable
             return false;
         }
 
-        return $this->games()->save($game) ? true : false;
+        $this->games()->save($game);
+        return true;
     }
 
 

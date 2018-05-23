@@ -70,7 +70,7 @@ class Game extends Model
 
         $newGame->save();
 
-        //TODO: Add questions to the game
+        //TODO: Receive Array of Questions
         for ($i = 1; $i <= 12; $i++) {
             Question::addNewQuestionToGame(
                 $newGame->id,

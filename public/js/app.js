@@ -48244,7 +48244,7 @@ exports = module.exports = __webpack_require__(12)(false);
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
 
 // exports
 
@@ -48313,25 +48313,35 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     props: ['playerName', 'url'],
     data: function data() {
         return {
+
             userSecret: '',
 
             gameStatus: 'Loading',
             secondsRemaining: 0,
 
-            // Question related data
             questionData: null,
             questionStatistics: null,
             isQuestionReadOnly: false,
 
-            // Player related data
             isPlayerDisqualified: false,
-            playerScore: 0
+            playerScore: 0,
+
+            // Player related data
+            // Question related data
+            // Constants:
+            statuses: {
+                LOADING: 'Loading',
+                NOT_IN_GAME: 'Not in Game',
+                WAITING_FOR_GAME: 'Waiting for Game',
+                ASKING_QUESTION: 'Asking Question',
+                VIEWING_ANSWER_POLL: 'Viewing Answer Poll'
+            }
         };
     },
 
     watch: {
         questionData: function questionData() {
-            this.isQuestionReadOnly = this.isPlayerDisqualified || this.gameStatus === 'Viewing Answer Poll';
+            this.isQuestionReadOnly = this.isPlayerDisqualified || this.isViewingAnswerPolls;
         }
     },
     methods: {
@@ -48344,14 +48354,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         // Support Methods
         //
         getStatsForAnswer: function getStatsForAnswer(answerText, choicesStats) {
+            var INDEX_OF_RIGHT_ANSWER = 0;
+
             for (var i = 0; i < choicesStats.length; i++) {
                 if (answerText === choicesStats[i].answerText) {
                     return {
                         answerText: answerText,
                         count: choicesStats[i].count,
-                        isRightChoice: i === 0 // The answers are stored in the database
-                        // as (right, wrong1, wrong2) therefore
-                        // the right alternative always comes first
+                        isRightChoice: i === INDEX_OF_RIGHT_ANSWER
                     };
                 }
             }
@@ -48388,7 +48398,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         redirect: _this.url
                     }).then(function () {
                         // With token now created, re-attempt to retrieve said token
-                        _this.getUserSecret(); //TODO: Ask Dan if Recursion is frowned upon
+                        _this.getUserSecret();
                     });
                     return false;
                 };
@@ -48404,7 +48414,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 // If there's no user secret. Ignore the request.
                 console.log('User Secret is required to communicate with the API, request for status cannot be sent');
                 setTimeout(this.getGameStatus, 500);
-                return false;
+                return;
             }
 
             window.axios.get(this.url + '/api/game/getStatus?userSecretToken=' + this.userSecret).then(function (response) {
@@ -48412,28 +48422,32 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
                 _this2.secondsRemaining = response.data.secondsRemaining;
                 switch (_this2.gameStatus) {
-                    case 'Not in Game':
+                    case _this2.statuses.NOT_IN_GAME:
                         // If there's a upcoming game, tell player when it's coming
                         break;
-                    case 'Waiting for Game':
+
+                    case _this2.statuses.WAITING_FOR_GAME:
                         // Inform the user how long they have to wait
                         break;
-                    case 'Asking Question':
+
+                    case _this2.statuses.ASKING_QUESTION:
                         _this2.questionData = response.data.currentQuestion;
                         _this2.questionStatistics = null;
                         break;
-                    case 'Viewing Answer Poll':
+
+                    case _this2.statuses.VIEWING_ANSWER_POLL:
                         //this.questionStatistics = response.data.currentQuestion.statistics;
                         _this2.questionStatistics = _this2.parseQuestionStatistics(response.data.currentQuestion.statistics);
                         _this2.isPlayerDisqualified = response.data.player.isDisqualified;
                         _this2.playerScore = response.data.player.score;
                         break;
+
                     default:
-                        Console.log('Unhandled gameStatue = ' + response.data.status);
+                        Console.log('Unhandled Game Status = ' + response.data.status);
                         break;
                 }
-
-                return true;
+            }).catch(function () {
+                console.log('Failed to get Game Status.');
             });
         },
         answerCurrentQuestion: function answerCurrentQuestion(answerStr) {
@@ -48452,7 +48466,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 userSecretToken: this.userSecret,
                 answerGiven: answerStr
             }).then(function (response) {
+                console.log('New answer has been registered: (' + answerStr);
                 _this3.isQuestionReadOnly = true;
+            }).catch(function () {
+                console.log('Failed to register answer: (' + answerStr);
             });
         },
         requestToJoinGame: function requestToJoinGame() {
@@ -48468,8 +48485,28 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             axios.post(this.url + '/api/game/joinGame', {
                 userSecretToken: this.userSecret
             }).then(function () {
+                console.log('Game Joined!');
                 _this4.getGameStatus();
+            }).catch(function () {
+                console.log('Failed to Join the Game!');
             });
+        }
+    },
+    computed: {
+        isLoading: function isLoading() {
+            return this.gameStatus === this.statuses.LOADING;
+        },
+        isNotInGame: function isNotInGame() {
+            return this.gameStatus === this.statuses.NOT_IN_GAME;
+        },
+        isWaitingForGame: function isWaitingForGame() {
+            return this.gameStatus === this.statuses.WAITING_FOR_GAME;
+        },
+        isAskingQuestion: function isAskingQuestion() {
+            return this.gameStatus === this.statuses.ASKING_QUESTION;
+        },
+        isViewingAnswerPolls: function isViewingAnswerPolls() {
+            return this.gameStatus === this.statuses.VIEWING_ANSWER_POLL;
         }
     },
     mounted: function mounted() {
@@ -48487,11 +48524,11 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", [
-    _vm.gameStatus === "Loading"
+    _vm.isLoading
       ? _c("div", [_vm._v("\n        Loading...\n    ")])
       : _vm._e(),
     _vm._v(" "),
-    _vm.gameStatus === "Not in Game"
+    _vm.isNotInGame
       ? _c("div", [
           _vm._v(
             "\n        You are not part of any game... (Sorry!)\n        "
@@ -48521,7 +48558,7 @@ var render = function() {
         ])
       : _vm._e(),
     _vm._v(" "),
-    _vm.gameStatus === "Waiting for Game"
+    _vm.isWaitingForGame
       ? _c(
           "div",
           [
@@ -48538,8 +48575,7 @@ var render = function() {
         )
       : _vm._e(),
     _vm._v(" "),
-    _vm.gameStatus === "Asking Question" ||
-    _vm.gameStatus === "Viewing Answer Poll"
+    _vm.isAskingQuestion || _vm.isViewingAnswerPolls
       ? _c(
           "div",
           [
@@ -48557,7 +48593,7 @@ var render = function() {
               }
             }),
             _vm._v(" "),
-            _vm.gameStatus === "Asking Question"
+            _vm.isAskingQuestion
               ? _c("question", {
                   attrs: {
                     "question-data": _vm.questionData,
@@ -48567,7 +48603,7 @@ var render = function() {
                 })
               : _vm._e(),
             _vm._v(" "),
-            _vm.gameStatus === "Viewing Answer Poll"
+            _vm.isViewingAnswerPolls
               ? _c("question", {
                   attrs: {
                     "question-data": _vm.questionData,

@@ -8,13 +8,13 @@ use App\Question;
 use Tests\TestCase;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Response;
 
 class GameApiTest extends TestCase
 {
     // The player is not in any game yet
     // The api should know that and inform the player of an upcoming game
     public function testItInformsPlayerOfUpcomingGameWhenPlayerIsNotInAnyGame(){
-        //$this->artisan('migrate:fresh');
 
         //
         // SET UP
@@ -46,10 +46,9 @@ class GameApiTest extends TestCase
         // ASSESSMENT
         //
         $response->assertJsonFragment([
-            'status' => 'Not in Game'
+            'status' => 'Not in Game',
         ]);
-
-        $this->assertGreaterThan(30,$response->json()['secondsRemaining']);
+        $this->assertGreaterThan(30,$response->json(['secondsRemaining']));
 
     }
 
@@ -57,7 +56,6 @@ class GameApiTest extends TestCase
     // The player is not in any game and requests the API to put them into a game
     public function testItAllowsPlayerToJoinGame()
     {
-        //$this->artisan('migrate:fresh');
         //
         // SET UP
         //
@@ -87,9 +85,7 @@ class GameApiTest extends TestCase
         //
         // ASSESSMENT
         //
-        $response->assertExactJson([
-            'hasJoinedGame' => true,
-        ]);
+        $response->assertStatus(Response::HTTP_OK);
     }
 
 
@@ -132,9 +128,7 @@ class GameApiTest extends TestCase
         //
         // ASSESSMENT
         //
-        $response->assertExactJson([
-            'hasJoinedGame' => false,
-        ]);
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
 
@@ -173,10 +167,10 @@ class GameApiTest extends TestCase
         //
         // ASSESSMENT
         //
-        $response->assertExactJson([
+        $response->assertJsonFragment([
             'status' => 'Waiting for Game',
-            'secondsRemaining' => 35,
         ]);
+        $this->assertGreaterThan(30,$response->json(['secondsRemaining']));
 
     }
 
@@ -614,13 +608,8 @@ class GameApiTest extends TestCase
 
         // The API should not store the answer given by the disqualified player and
         // store the answer given by the qualified player
-        $replyToActivePlayer->assertExactJson([
-            'answerStored' => true,
-        ]);
-
-        $replyToDisqualifiedPlayer->assertExactJson([
-            'answerStored' => false,
-        ]);
+        $replyToActivePlayer->assertStatus(Response::HTTP_OK);
+        $replyToDisqualifiedPlayer->assertStatus(Response::HTTP_BAD_REQUEST);
 
 
         // The active player should have 2 answers stored in the database, while the
@@ -680,9 +669,7 @@ class GameApiTest extends TestCase
 
         // The API should not store the newly given answer, because each player should
         // only be allowed to answer a question once.
-        $response->assertExactJson([
-            'answerStored' => false,
-        ]);
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
 
