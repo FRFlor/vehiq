@@ -14,11 +14,9 @@ class GameApiTest extends TestCase
 {
     // The player is not in any game yet
     // The api should know that and inform the player of an upcoming game
-    public function testItInformsPlayerOfUpcomingGameWhenPlayerIsNotInAnyGame(){
+    public function testItInformsPlayerOfUpcomingGameWhenPlayerIsNotInAnyGame()
+    {
 
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create();
         $this->addMultipleQuestionsToLatestGame(12);
@@ -36,19 +34,13 @@ class GameApiTest extends TestCase
         Game::find(1)->update(['startTime' => Carbon::now()->addSeconds(35)]);
 
 
-        //
-        // EXECUTION
-        //
         $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
 
 
-        //
-        // ASSESSMENT
-        //
         $response->assertJsonFragment([
             'status' => 'Not in Game',
         ]);
-        $this->assertGreaterThan(30,$response->json(['secondsRemaining']));
+        $this->assertGreaterThan(30, $response->json(['secondsRemaining']));
 
     }
 
@@ -56,9 +48,6 @@ class GameApiTest extends TestCase
     // The player is not in any game and requests the API to put them into a game
     public function testItAllowsPlayerToJoinGame()
     {
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create();
         $this->addMultipleQuestionsToLatestGame(12);
@@ -76,15 +65,9 @@ class GameApiTest extends TestCase
         Game::find(1)->update(['startTime' => Carbon::now()->addSeconds(35)]);
 
 
-        //
-        // EXECUTION
-        //
         $response = $this->postJson("/api/game/joinGame?userSecretToken=$secret");
 
 
-        //
-        // ASSESSMENT
-        //
         $response->assertStatus(Response::HTTP_OK);
     }
 
@@ -114,7 +97,6 @@ class GameApiTest extends TestCase
         // Set both games to start in the future
         Game::find(1)->update(['startTime' => Carbon::now()->addSeconds(35)]);
         Game::find(2)->update(['startTime' => Carbon::now()->addSeconds(55)]);
-        // TODO: Comments are a bit of overkill...
 
         $response = $this->postJson("/api/game/joinGame?userSecretToken=$secret");
 
@@ -125,12 +107,8 @@ class GameApiTest extends TestCase
 
     // The player is currently enrolled in a game
     // The api should inform the player how long it will take until the game starts
-    public function testItInformsPlayerOfUpcomingGameWhenPlayerIsWaitingForGameToStart(){
-
-
-        //
-        // SET UP
-        //
+    public function testItInformsPlayerOfUpcomingGameWhenPlayerIsWaitingForGameToStart()
+    {
         // Create a game with 12 questions
         factory(Game::class)->create();
         $this->addMultipleQuestionsToLatestGame(12);
@@ -149,19 +127,13 @@ class GameApiTest extends TestCase
         Game::find(1)->update(['startTime' => Carbon::now()->addSeconds(35)]);
 
 
-        //
-        // EXECUTION
-        //
         $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
 
 
-        //
-        // ASSESSMENT
-        //
         $response->assertJsonFragment([
             'status' => 'Waiting for Game',
         ]);
-        $this->assertGreaterThan(30,$response->json(['secondsRemaining']));
+        $this->assertGreaterThan(30, $response->json(['secondsRemaining']));
 
     }
 
@@ -169,12 +141,9 @@ class GameApiTest extends TestCase
 
     // The player is enrolled in a game, and the game has already started!
     // Test if the api is asking the player a question.
-    public function testItRecognizesWhenAGameStarts(){
+    public function testItRecognizesWhenAGameStarts()
+    {
 
-
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create();
         $this->addMultipleQuestionsToLatestGame(12);
@@ -194,22 +163,17 @@ class GameApiTest extends TestCase
         Game::find(1)->update(['startTime' => Carbon::now()->subSeconds(5)]);
 
 
-        //
-        // EXECUTION
-        //
         $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
 
 
-        //
-        // ASSESSMENT
-        //
         $response->assertSeeText("\"questionNumber\":1");
         $response->assertJsonFragment([
             'status' => 'Asking Question',
             'player' => [
                 'isDisqualified' => false,
                 'score' => 0,
-            ]]);
+            ]
+        ]);
     }
 
 
@@ -223,14 +187,11 @@ class GameApiTest extends TestCase
     public function testItEndsTheGameIfAllPlayersAreDisqualified()
     {
 
-
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(12);
 
         // Create a user that is enrolled in the game
@@ -254,15 +215,8 @@ class GameApiTest extends TestCase
         $game->update(['startTime' => Carbon::now()->subSeconds(20)]);
 
 
-        //
-        // EXECUTION
-        //
         $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
 
-
-        //
-        // ASSESSMENT
-        //
 
         // There should be no question 2, since all players have been disqualified.
         // The game should have ended prematurely
@@ -279,16 +233,14 @@ class GameApiTest extends TestCase
     // - Show question statistics
     // - Wait for question statistics time to expire
     // - End game  (since all players have been disqualified)
-    public function testItKeepsTheGameLoopCompleteEvenWhenAllPlayersHaveBeenDisqualified(){
+    public function testItKeepsTheGameLoopCompleteEvenWhenAllPlayersHaveBeenDisqualified()
+    {
 
-
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(12);
 
         // Create a user that is enrolled in the game
@@ -307,9 +259,6 @@ class GameApiTest extends TestCase
         // Player Answers it wrong (Causing them to be disqualified)
         User::find(1)->answerQuestion($game->currentQuestion->wrongAnswer1);
 
-        //
-        // EXECUTION + ASSESSMENT
-        //
 
         // The game should still be holding the question on the screen after
         // the player answers it wrong
@@ -344,14 +293,11 @@ class GameApiTest extends TestCase
     public function testItEndsTheGameIfAllQuestionsHaveBeenAsked()
     {
 
-
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(2); // Game has only 2 questions
 
         // Create a user that is enrolled in the game
@@ -380,15 +326,9 @@ class GameApiTest extends TestCase
         $game->update(['startTime' => Carbon::now()->subSeconds(50)]);
 
 
-        //
-        // EXECUTION
-        //
         $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
 
 
-        //
-        // ASSESSMENT
-        //
         $response->assertJsonFragment([
             'status' => 'Not in Game'
         ]);
@@ -401,14 +341,11 @@ class GameApiTest extends TestCase
     public function testItDisqualifiesAPlayerForTimeOut()
     {
 
-
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(12);
 
         // Create a user that is enrolled in the game
@@ -431,15 +368,8 @@ class GameApiTest extends TestCase
         $game->update(['startTime' => Carbon::now()->subSeconds(20)]);
 
 
-        //
-        // EXECUTION
-        //
         $response = $this->getJson("/api/game/getStatus?userSecretToken=$secret");
 
-
-        //
-        // ASSESSMENT
-        //
 
         // There should be no question 2, since all players have been disqualified.
         // The game should have ended prematurely
@@ -449,16 +379,15 @@ class GameApiTest extends TestCase
     }
 
     // A player that is disqualified is free to watch the game that is in-progress
-    function testItAllowsADisqualifiedPlayerToWatchTheGame(){
+    function testItAllowsADisqualifiedPlayerToWatchTheGame()
+    {
 
 
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(12);
 
         // Create two users that are enrolled in the game
@@ -491,11 +420,6 @@ class GameApiTest extends TestCase
         // Player 2 Answers it correctly
         $activePlayer->answerQuestion($game->currentQuestion->rightAnswer);
 
-
-
-        //
-        // EXECUTION
-        //
 
         // Enough time has elapsed for the second question to be on display
         $game->update(['startTime' => Carbon::now()->subSeconds(20)]);
@@ -507,37 +431,35 @@ class GameApiTest extends TestCase
         $this->actingAs($disqualifiedPlayer);
         $replyToDisqualifiedPlayer = $this->getJson("/api/game/getStatus?userSecretToken=$disqualifiedPlayerSecret");
 
-        //
-        // ASSESSMENT
-        //
 
         // The game should still be displaying the question information to both players, but it should
         // know that the player that got question 1 wrong is now disqualified
         $replyToActivePlayer->assertJsonFragment([
             'status' => 'Asking Question',
             'isDisqualified' => false,
-            'questionNumber' => 2]);
+            'questionNumber' => 2
+        ]);
 
         $replyToDisqualifiedPlayer->assertJsonFragment([
             'status' => 'Asking Question',
             'isDisqualified' => true,
-            'questionNumber' => 2]);
+            'questionNumber' => 2
+        ]);
 
     }
 
 
     // Even though disqualified players are able to watch the game, they should
     // not be able to answer questions.
-    function testItIgnoreRequestsToAnswerQuestionFromDisqualifiedPlayers(){
+    function testItIgnoreRequestsToAnswerQuestionFromDisqualifiedPlayers()
+    {
 
 
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(12);
 
         // Create two users that are enrolled in the game
@@ -569,33 +491,23 @@ class GameApiTest extends TestCase
         $disqualifiedPlayer->answerQuestion($game->currentQuestion->wrongAnswer1);
         // Player 2 Answers it correctly
         $activePlayer->answerQuestion($game->currentQuestion->rightAnswer);
-
-
-
-        //
-        // EXECUTION
-        //
-
+        
         // Enough time has elapsed for the second question to be on display
         $game->update(['startTime' => Carbon::now()->subSeconds(20)]);
 
         // Both players request the API to register their answers for question 2
         $this->actingAs($activePlayer);
-        $replyToActivePlayer = $this->postJson("/api/game/answerQuestion",[
+        $replyToActivePlayer = $this->postJson("/api/game/answerQuestion", [
             'userSecretToken' => $activePlayerSecret,
             'answerGiven' => $game->currentQuestion->rightAnswer
         ]);
 
         $this->actingAs($disqualifiedPlayer);
-        $replyToDisqualifiedPlayer = $this->postJson("/api/game/answerQuestion",[
+        $replyToDisqualifiedPlayer = $this->postJson("/api/game/answerQuestion", [
             'userSecretToken' => $disqualifiedPlayerSecret,
             'answerGiven' => $game->currentQuestion->rightAnswer
         ]);
 
-
-        //
-        // ASSESSMENT
-        //
 
         // The API should not store the answer given by the disqualified player and
         // store the answer given by the qualified player
@@ -605,23 +517,21 @@ class GameApiTest extends TestCase
 
         // The active player should have 2 answers stored in the database, while the
         // disqualified player should only have 1 answer stored
-        $this->assertEquals(2,$activePlayer->questions()->count());
-        $this->assertEquals(1,$disqualifiedPlayer->questions()->count());
+        $this->assertEquals(2, $activePlayer->questions()->count());
+        $this->assertEquals(1, $disqualifiedPlayer->questions()->count());
     }
 
 
-
     // A player may only answer a given question once, the api needs to enforce this rule
-    function testItIgnoresSubsequentRequestsToAnswerQuestion(){
+    function testItIgnoresSubsequentRequestsToAnswerQuestion()
+    {
 
 
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(12);
 
         // Create a user that are enrolled in the game
@@ -643,20 +553,12 @@ class GameApiTest extends TestCase
         $activePlayer->answerQuestion($game->currentQuestion->rightAnswer);
 
 
-        //
-        // EXECUTION
-        //
-
         // The player requests the api to again answer the same question
-        $response = $this->postJson("/api/game/answerQuestion",[
+        $response = $this->postJson("/api/game/answerQuestion", [
             'userSecretToken' => $activePlayerSecret,
             'answerGiven' => $game->currentQuestion->rightAnswer
         ]);
 
-
-        //
-        // ASSESSMENT
-        //
 
         // The API should not store the newly given answer, because each player should
         // only be allowed to answer a question once.
@@ -664,17 +566,15 @@ class GameApiTest extends TestCase
     }
 
 
+    public function testItKeepsTrackOfThePlayerScore()
+    {
 
-    public function testItKeepsTrackOfThePlayerScore(){
 
-
-        //
-        // SET UP
-        //
         // Create a game with 12 questions
         factory(Game::class)->create([
             'secondsToAnswerQuestion' => 10,
-            'secondsToReadQuestionStats' => 5]);
+            'secondsToReadQuestionStats' => 5
+        ]);
         $this->addMultipleQuestionsToLatestGame(12);
 
         // Create a user that is enrolled in the game
@@ -727,17 +627,19 @@ class GameApiTest extends TestCase
     // =================================================
     //                  Support Methods
     // =================================================
-    public function addMultipleQuestionsToLatestGame($questionCount){
-        for($i = 0; $i < $questionCount; $i++){
+    public function addMultipleQuestionsToLatestGame($questionCount)
+    {
+        for ($i = 0; $i < $questionCount; $i++) {
             factory(Question::class)->create();
         }
     }
 
-    public function addFakeSecretTokenForPlayer($playerId){
+    public function addFakeSecretTokenForPlayer($playerId)
+    {
         DB::table('oauth_clients')->insert([
             'user_id' => $playerId,
             'name' => 'Testing',
-            'secret' => 'testSecret'.$playerId,
+            'secret' => 'testSecret' . $playerId,
             'redirect' => 'http://vehiq.test/',
             'personal_access_client' => 0,
             'password_client' => 0,

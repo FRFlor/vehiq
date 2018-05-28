@@ -7,11 +7,9 @@
 
 <script>
     export default {
-        props: ['secondsCount']
-        ,
+        props: ['secondsCount'],
         data() {
-            return {
-            }
+            return {}
         },
         methods: {
             timerLoop() {

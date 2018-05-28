@@ -46,7 +46,9 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name',
+        'email',
+        'password',
     ];
 
     /**
@@ -55,7 +57,8 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
     function games()
@@ -84,11 +87,20 @@ class User extends Authenticatable
 
     function getScoreAttribute()
     {
-        $gameId = Game::currentGame($this->id)->id;
+        $game = Game::currentGame($this->id);
+
+        if (!$game) {
+            $game = $this->games()->first();
+        }
+
+        if (!$game) {
+            return 0;
+        }
+
 
         $score = 0;
         foreach ($this->questions as $userResponse) {
-            if ($userResponse->game_Id == $gameId &&
+            if ($userResponse->game_Id == $game->id &&
                 trim($userResponse->rightAnswer) == trim($userResponse->pivot->answerGiven)) {
                 $score++;
             }
@@ -153,7 +165,6 @@ class User extends Authenticatable
         return $this->games->contains->isInProgress;
 
 
-
     }
 
     function joinGame()
@@ -179,12 +190,12 @@ class User extends Authenticatable
     {
         $currentGame = Game::currentGame($this->id);
 
-        if(!$currentGame){
+        if (!$currentGame) {
             return false;
         }
 
         return $this->questions()
-                ->where('game_id',$currentGame->id)
+                ->where('game_id', $currentGame->id)
                 ->count() >= $currentGame->currentQuestionNumber;
     }
 }
